@@ -1,93 +1,133 @@
+<div align="center">
+
 # browser-port
 
-Give your agent the power to port any open-source desktop app or game to the browser, so it runs from
-a link anyone can open.
+### Give your agent the power to port any open-source desktop app or game to the browser, so it runs from a link anyone can open.
 
-`browser-port` drives Emscripten, a headless browser, and a static site builder. Your agent decides
-what to do; the tool does the reliable steps and records evidence at every one. The tool never calls a
-model.
+[![CI](https://github.com/Abelo9996/browser-port/actions/workflows/ci.yml/badge.svg)](https://github.com/Abelo9996/browser-port/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node 20+](https://img.shields.io/badge/node-20%2B-339933?logo=nodedotjs&logoColor=white)](package.json)
+[![MCP server](https://img.shields.io/badge/MCP-server-5c4ee5)](#use-it-with-your-agent)
 
-## Quickstart
+<img src="docs/demo.gif" alt="SDL Tetris, a C game, running in the browser after browser-port compiled it to WebAssembly and played it in headless Chrome" width="560" />
+
+<sub>A C + SDL2 Tetris clone, built to WebAssembly by browser-port and played in headless Chrome during <code>verify</code>.</sub>
+
+[Try it](#try-it) · [Use it with your agent](#use-it-with-your-agent) · [Real ports](#real-ports) · [How it works](#how-it-works) · [Limits](#what-it-cant-do)
+
+</div>
+
+---
+
+Found a great open-source game or tool that only runs on someone's desktop? Ask your agent to port it.
+browser-port gives it the operations to do that properly: check whether the code can run in a browser,
+compile it to WebAssembly with Emscripten, package a static site, then open it in a real browser and
+prove it works. You get a folder you can put on any static host, and a report of everything that was
+done and checked.
+
+## Try it
+
+> Not on npm yet. Until the first release, install from GitHub:
+
+```bash
+git clone https://github.com/Abelo9996/browser-port && cd browser-port
+npm install && npm run build && npm link       # puts `browser-port` on your PATH
+brew install emscripten                         # or have Docker running for the emscripten/emsdk image
+npx playwright install chromium                 # the browser `verify` uses
+```
+
+Then port the Tetris clone from the GIF above:
+
+```bash
+browser-port inspect https://github.com/olzhasar/sdl-tetris --dest /tmp/tetris-src --save /tmp/tetris
+browser-port build /tmp/tetris --source /tmp/tetris-src \
+  --sources src/game.c src/graphics.c src/input.c src/main.c \
+  --app-kind sdl2 --libs SDL2 SDL2_ttf --preload-map "src/assets/font.ttf@font.ttf"
+browser-port package /tmp/tetris --title "SDL Tetris" --mode canvas --license /tmp/tetris-src/LICENSE
+browser-port verify /tmp/tetris --mode canvas --seconds 3
+browser-port serve /tmp/tetris/site                # open the printed URL and play
+```
+
+What `verify` printed on a fresh run (Apple M4, Emscripten 6.0.12):
 
 ```
-npx browser-port setup                 # register the MCP server with your agent (dry run; add --yes to apply)
-npx browser-port inspect <github-url>   # is it portable, and what needs changing
-npx browser-port build / package / verify / report
+Verify pass (canvas)
+Frames: 166, fps: 55.2, non-blank: true
+  note: Canvas content changed across the observation window.
 ```
-
-## Example
-
-Porting [olzhasar/sdl-tetris](https://github.com/olzhasar/sdl-tetris) (C, SDL2, SDL2_ttf) end to end:
-
-```
-$ browser-port verify ./tetris --mode canvas --seconds 3 --json
-{
-  "ok": true,
-  "mode": "canvas",
-  "consoleErrors": [],
-  "canvasNonBlank": true,
-  "fps": 57.3,
-  "frames": 172,
-  "durationMs": 3003
-}
-```
-
-The game running in headless Chrome, captured by `verify`:
-
-![SDL Tetris in the browser](examples/sdl-tetris/screenshots/canvas-end.png)
-
-Full write-ups, evidence bundles, and runnable sites for three real ports are in [examples/](examples).
-
-## How it works
-
-Seven operations, available both as CLI subcommands (with `--json`) and as MCP tools:
-
-1. `inspect` clones the repo shallow and reports the language, build system, libraries (SDL2 and its
-   image/mixer/ttf add-ons, OpenGL, raylib, pthreads, sockets, filesystem writes), assets, entry
-   point, and a portability verdict with each blocker and its usual fix.
-2. `toolchain` finds a local `emcc`, or the `emscripten/emsdk` Docker image if the daemon is running,
-   or tells you how to install it.
-3. `build` compiles to WebAssembly with the right flags: `-sUSE_SDL=2` and friends, asset preloading,
-   memory growth, and ASYNCIFY when a blocking main loop is present. Every command is recorded.
-4. `package` assembles a self-contained static site: an `index.html` with a canvas (or a terminal for
-   stdio programs), loading progress, fullscreen, keyboard focus, and an error panel, plus the
-   `.js`/`.wasm`/`.data` files.
-5. `serve` previews the site locally with the correct wasm MIME type.
-6. `verify` opens the site in headless Chrome and records evidence: console errors, whether the canvas
-   draws non-blank frames, frames per second, responses to scripted key presses, and screenshots. For
-   stdio programs it compares the browser output against a native build for the same inputs.
-7. `report` writes a Markdown and JSON evidence bundle: repo and commit, toolchain versions, every
-   command, what was changed in the source and why (as a patch), verification results, and limits.
 
 ## Use it with your agent
 
-Run `browser-port setup`. It registers the MCP server with Claude Code, Codex, and Cursor. It is a dry
-run by default; pass `--yes` to apply. It backs up existing config files and is idempotent.
+```bash
+browser-port setup          # shows what it would change
+browser-port setup --yes    # registers the MCP server with Claude Code, Codex and Cursor
+```
 
-- Claude Code: `claude mcp add browser-port -- npx -y browser-port mcp`
-- Codex: a `[mcp_servers.browser-port]` entry in `~/.codex/config.toml`
-- Cursor: an `mcpServers` entry in `~/.cursor/mcp.json`
+Then just ask:
 
-Agent instructions live in [`skills/browser-port/SKILL.md`](skills/browser-port/SKILL.md).
+> "Port github.com/olzhasar/sdl-tetris to the browser and prove it works."
+
+The agent follows [`skills/browser-port/SKILL.md`](skills/browser-port/SKILL.md): inspect first, fix
+only what blocks the port, record every source change as a patch, verify in a real browser, and say
+plainly when something isn't supported.
+
+> `setup` registers `npx -y browser-port mcp`, which works once the package is on npm. Until then,
+> point your agent at the local build instead: `claude mcp add browser-port -- browser-port mcp`.
+
+## Real ports
+
+Every row was produced end to end on a Mac with browser-port. Each folder in [examples/](examples) has
+the evidence bundle, screenshots, and the runnable site with the upstream license.
+
+| Program | What it is | Result |
+| --- | --- | --- |
+| [sdl-tetris](examples/sdl-tetris) | C game, SDL2 + SDL2_ttf | Plays in the browser, about 55 to 57 fps, no console errors |
+| [brainheck](examples/brainheck) | C terminal program (stdin/stdout) | Browser output matched the native build for the same inputs |
+| [hexyl](examples/not-supported/hexyl) | Rust hex viewer | "Not supported yet", with the reason |
+
+One honest note: sdl-tetris already guarded its main loop for Emscripten, so it needed no source
+edits. The tool handles programs that don't (it switches a blocking loop to
+`emscripten_set_main_loop` or ASYNCIFY and records the patch), but the examples here don't show that yet.
+
+## How it works
+
+```mermaid
+flowchart LR
+  A[GitHub repo] --> B[inspect]
+  B --> C[build<br/>Emscripten]
+  C --> D[package<br/>static site]
+  D --> E[verify<br/>headless Chrome]
+  E --> F[report<br/>evidence bundle]
+```
+
+| Step | What it does | Tools it drives |
+| --- | --- | --- |
+| `inspect` | Language, build system, libraries, assets, entry point, and a verdict: likely, needs changes (each blocker with its usual fix), or not supported | git |
+| `toolchain` | Finds a local `emcc`, else the `emscripten/emsdk` Docker image, else tells you how to install it | Emscripten, Docker |
+| `build` | Compiles with the right flags (`-sUSE_SDL=2`, asset preloading, memory growth, ASYNCIFY when needed) and records every command | emcc |
+| `package` | A self-contained site: canvas or terminal page, loading progress, fullscreen, keyboard focus, an error panel | |
+| `serve` | Local preview with the correct wasm MIME type (`--coi` adds the headers threads need) | |
+| `verify` | Console errors, non-blank frames, fps, scripted key presses, screenshots; for terminal programs, browser output vs a native build | Playwright, Chromium |
+| `report` | Markdown and JSON: repo and commit, toolchain versions, commands, source patch, results, limits | |
+
+Every step is a CLI subcommand (add `--json`) and an MCP tool.
 
 ## What it can't do
 
-- Only C and C++ programs that use SDL2, raylib, or plain stdin/stdout. Other languages and other
-  toolkits (GTK, Qt, native OpenGL windowing frameworks) get an honest "not supported yet" with the
-  reason.
-- No raw TCP or UDP sockets in the browser. Programs that need networking must switch to WebSocket.
-- Threads need COOP and COEP headers and SharedArrayBuffer; `serve --coi` sets the headers for local
-  testing.
-- A Brainfuck-style program that consumes all of stdin as its source cannot also read runtime input in
-  the stdio shell. This and other per-port limits are stated in each report.
+- Only C and C++ programs that use SDL2, raylib, or plain stdin/stdout for now. Other languages and
+  toolkits (GTK, Qt, native OpenGL windowing) get an honest "not supported yet" with the reason.
+- No raw TCP or UDP sockets in a browser. Networked programs have to move to WebSockets.
+- Threads need cross-origin isolation headers, which many static hosts don't set by default.
+- A program that reads all of stdin as its input can't also take interactive input in the terminal page.
 
 ## Privacy and safety
 
-Everything runs on your machine. The only things that leave it are the repository you ask it to clone
-and, if you use the Docker path, the `emscripten/emsdk` image pull. The tool never calls an LLM and
-sends no telemetry. `setup` only writes to the three config files above, backs them up first, and
-shows a dry run unless you pass `--yes`.
+Everything runs on your machine. The only network traffic is cloning the repo you ask for and, on the
+Docker path, pulling the `emscripten/emsdk` image. It never calls an LLM and sends no telemetry.
+`setup` only touches the three agent config files above, backs them up first, and is a dry run unless
+you pass `--yes`.
 
 ## License
 
-MIT, Copyright (c) 2026 Abel Yagubyan. See [LICENSE](LICENSE).
+MIT, Copyright (c) 2026 Abel Yagubyan. Ported programs keep their own licenses; `package --license`
+copies the upstream license into the site.
