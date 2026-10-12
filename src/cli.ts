@@ -33,8 +33,15 @@ program
   .argument("<source>", "GitHub URL or local path")
   .option("--json", "output JSON", false)
   .option("--dest <dir>", "clone destination for URLs")
+  .option("--save <workspace>", "write the report to <workspace>/evidence/inspect.json")
   .action(async (source, opts) => {
     const r = await inspect(source, { destDir: opts.dest });
+    if (opts.save) {
+      const { Workspace } = await import("./util/evidence.js");
+      const ws = new Workspace(opts.save);
+      await ws.ensure();
+      await ws.writeJson("inspect.json", r);
+    }
     out(opts.json, r, () => {
       console.log(`Source: ${r.source}`);
       console.log(`Language: ${r.language}  Build: ${r.buildSystem}  Kind: ${r.appKind}`);
@@ -68,8 +75,9 @@ program
   .option("--libs <names...>", "detected libraries (SDL2, SDL2_image, ...)", [])
   .option("--out <name>", "output basename", "index")
   .option("--preload <dirs...>", "directories to preload into the virtual FS", [])
+  .option("--preload-map <mapping>", "explicit --preload-file mapping src@dest (repeatable)", collect, [])
   .option("--asyncify", "wrap a blocking main loop with ASYNCIFY", false)
-  .option("--flags <flags...>", "extra emcc flags", [])
+  .option("--flags <flag>", "extra emcc flag (repeatable; use --flags=-sNAME=1 for dash flags)", collect, [])
   .option("--json", "output JSON", false)
   .action(async (workspace, opts) => {
     const r = await build(
@@ -80,6 +88,7 @@ program
         appKind: opts.appKind,
         outName: opts.out,
         preload: opts.preload,
+        preloadMap: opts.preloadMap,
         useAsyncify: opts.asyncify,
         extraFlags: opts.flags,
       },

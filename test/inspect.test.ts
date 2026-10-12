@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
+import { describe, expect, it, afterAll } from "vitest";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -63,6 +63,17 @@ int main(void){ int n; scanf("%d", &n); printf("%d\\n", n*2); return 0; }`,
     const r = await inspect(root);
     expect(r.portability).toBe("not-supported");
     expect(r.blockers[0]?.id).toBe("no-c-cpp");
+  });
+
+  it("marks a C library with no main() not supported", async () => {
+    const root = await makeTree({
+      "strutil.c": "#include <string.h>\nint add(int a, int b){ return a + b; }\n",
+      "strutil.h": "int add(int, int);\n",
+    });
+    dirs.push(root);
+    const r = await inspect(root);
+    expect(r.portability).toBe("not-supported");
+    expect(r.blockers[0]?.id).toBe("no-entry-point");
   });
 
   it("flags sockets and pthreads as blockers but still needs-changes for stdio", async () => {

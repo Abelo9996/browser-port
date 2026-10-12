@@ -36,6 +36,11 @@ interface Page {
   keyboard: { press: (key: string) => Promise<void> };
   on: (event: string, cb: (msg: { type: () => string; text: () => string }) => void) => void;
   waitForTimeout: (ms: number) => Promise<void>;
+  $: (selector: string) => Promise<ElementHandle | null>;
+}
+
+interface ElementHandle {
+  screenshot: (opts: { path: string }) => Promise<Buffer>;
 }
 
 async function loadPlaywright(): Promise<PlaywrightModule | null> {
@@ -101,6 +106,14 @@ async function makePage(browser: { newPage: () => Promise<Page> }, errors: strin
   return page;
 }
 
+/** Screenshot just the canvas element, falling back to the full page. Returns the PNG bytes. */
+async function screenshotCanvas(page: Page, file: string): Promise<Buffer | null> {
+  const el = await page.$("#canvas");
+  if (el) return el.screenshot({ path: file });
+  await page.screenshot({ path: file });
+  return null;
+}
+
 async function verifyCanvas(
   _pw: PlaywrightModule,
   browser: { newPage: () => Promise<Page> },
@@ -118,9 +131,11 @@ async function verifyCanvas(
     notes.push("Runtime did not report started within 30s.");
   });
 
-  const startShot = path.join(shotsDir, "canvas-start.png");
-  await page.screenshot({ path: startShot });
-  screenshots.push(startShot);
+  // A canvas element screenshot composites the real rendered frame, which is a
+  // reliable signal. Reading the WebGL buffer directly is not, because SDL does
+  // not preserve the drawing buffer between frames.
+  const startBuf = await screenshotCanvas(page, path.join(shotsDir, "canvas-start.png"));
+  screenshots.push(path.join(shotsDir, "canvas-start.png"));
 
   // Scripted key presses.
   const keySteps = options.keys ?? [];
@@ -139,33 +154,16 @@ async function verifyCanvas(
   const frames = framesAfter - framesBefore;
   const fps = Math.round((frames / elapsed) * 1000 * 10) / 10;
 
-  // Non-blank check: sample canvas pixels for any variation.
-  const canvasNonBlank = await page.evaluate<boolean>(`(function () {
-    var c = document.getElementById("canvas");
-    if (!c) return false;
-    try {
-      var gl = c.getContext("webgl2") || c.getContext("webgl");
-      if (gl) {
-        var px = new Uint8Array(c.width * c.height * 4);
-        gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, px);
-        var first = px[0], varied = false;
-        for (var i = 0; i < px.length; i += 4) { if (px[i] !== first) { varied = true; break; } }
-        return varied;
-      }
-      var ctx = c.getContext("2d");
-      if (ctx) {
-        var d = ctx.getImageData(0, 0, c.width, c.height).data;
-        var f = d[0], v = false;
-        for (var j = 0; j < d.length; j += 4) { if (d[j] !== f) { v = true; break; } }
-        return v;
-      }
-    } catch (e) { return false; }
-    return false;
-  })()`);
+  const endBuf = await screenshotCanvas(page, path.join(shotsDir, "canvas-end.png"));
+  screenshots.push(path.join(shotsDir, "canvas-end.png"));
 
-  const endShot = path.join(shotsDir, "canvas-end.png");
-  await page.screenshot({ path: endShot });
-  screenshots.push(endShot);
+  // Non-blank: the canvas screenshot is either non-uniform (larger than a solid
+  // fill compresses to) or it changed across the observation window.
+  const SOLID_PNG_MAX = 2000;
+  const changed = startBuf !== null && endBuf !== null && !startBuf.equals(endBuf);
+  const hasContent = (startBuf?.length ?? 0) > SOLID_PNG_MAX || (endBuf?.length ?? 0) > SOLID_PNG_MAX;
+  const canvasNonBlank = changed || hasContent;
+  if (changed) notes.push("Canvas content changed across the observation window.");
 
   const errors = await page.evaluate<string[]>("window.__bp.errors");
   for (const e of errors) if (!consoleErrors.includes(e)) consoleErrors.push(e);

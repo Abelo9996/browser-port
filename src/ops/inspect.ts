@@ -192,6 +192,19 @@ function assessPortability(d: Detection): { portability: Portability; blockers: 
     });
   }
 
+  if (d.appKind === "stdio" && d.entryPoint === null) {
+    return {
+      portability: "not-supported",
+      blockers: [
+        {
+          id: "no-entry-point",
+          what: "No main() entry point was found, so this is a library rather than a runnable program.",
+          fix: "Point browser-port at an application that has a main() function. Libraries are not ported on their own.",
+        },
+      ],
+    };
+  }
+
   const supported = d.appKind === "sdl2" || d.appKind === "raylib" || d.appKind === "stdio";
   if (!supported) {
     blockers.unshift({

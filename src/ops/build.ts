@@ -17,6 +17,8 @@ export interface BuildSpec {
   outName?: string;
   /** Directories (relative to sourceDir) to preload into the virtual FS. */
   preload?: string[];
+  /** Explicit --preload-file mappings, for example "src/assets/font.ttf@font.ttf". */
+  preloadMap?: string[];
   /** Wrap a blocking main loop so it yields to the browser. */
   useAsyncify?: boolean;
   /** Extra emcc flags the agent wants to add. */
@@ -41,6 +43,9 @@ export function flagsFor(spec: BuildSpec, detectedLibs: string[] = []): string[]
 
   for (const dir of spec.preload ?? []) {
     flags.push("--preload-file", `${dir}@/${dir}`);
+  }
+  for (const mapping of spec.preloadMap ?? []) {
+    flags.push("--preload-file", mapping);
   }
   if (spec.extraFlags) flags.push(...spec.extraFlags);
   return flags;
