@@ -1,0 +1,68 @@
+diff --git a/brainheck.c b/brainheck.c
+index 1843606..b986e88 100644
+--- a/brainheck.c
++++ b/brainheck.c
+@@ -41,27 +41,48 @@ static void brainheck(char *program) {
+     }
+ }
+ 
++/* Read the whole of a stream into a NUL-terminated buffer. */
++static char *read_all(FILE *file) {
++    size_t cap = 1 << 16;
++    size_t len = 0;
++    char *buf = malloc(cap);
++    if (!buf) return NULL;
++    int ch;
++    while ((ch = getc(file)) != EOF) {
++        if (len + 1 >= cap) {
++            cap *= 2;
++            char *grown = realloc(buf, cap);
++            if (!grown) { free(buf); return NULL; }
++            buf = grown;
++        }
++        buf[len++] = (char)ch;
++    }
++    buf[len] = '\0';
++    return buf;
++}
++
+ int main(int argc, char **argv) {
+-    if (argc != 2) {
+-        fprintf(stderr, "usage: %s <file.bf>\n", argv[0]);
+-        return EXIT_FAILURE;
++    char *program;
++
++    if (argc >= 2) {
++        FILE *file = fopen(argv[1], "rb");
++        if (!file) {
++            fprintf(stderr, "Could not open '%s'\n", argv[1]);
++            return EXIT_FAILURE;
++        }
++        program = read_all(file);
++        fclose(file);
++    } else {
++        /* No file argument: read the program from stdin so it runs as a
++           stdin/stdout filter. This is the form the browser port uses. */
++        program = read_all(stdin);
+     }
+ 
+-    FILE *file = fopen(argv[1], "rb");
+-    if (!file) {
+-        fprintf(stderr, "Could not open '%s'\n", argv[1]);
++    if (!program) {
++        fprintf(stderr, "Out of memory reading program\n");
+         return EXIT_FAILURE;
+     }
+ 
+-    fseek(file, 0, SEEK_END);
+-    size_t fsize = ftell(file);
+-    rewind(file);
+-
+-    char *program = malloc(fsize + 1);
+-    fread(program, sizeof(char), fsize, file);
+-    program[fsize] = '\0';
+-    fclose(file);
+-
+     brainheck(program);
+     free(program);
+     return EXIT_SUCCESS;

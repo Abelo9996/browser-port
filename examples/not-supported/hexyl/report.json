@@ -1,0 +1,43 @@
+{
+  "title": "hexyl: not supported yet",
+  "generatedAt": "2026-10-12T20:16:46.347Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": "https://github.com/sharkdp/hexyl",
+    "resolvedPath": ".work/hexyl",
+    "repo": {
+      "url": "https://github.com/sharkdp/hexyl",
+      "commit": "6ecc29b9c8c84d08a7e860f7f69c22b113b480ea"
+    },
+    "language": "unknown",
+    "buildSystem": "unknown",
+    "appKind": "unknown",
+    "libraries": [],
+    "assets": [],
+    "entryPoint": null,
+    "sourceFiles": [],
+    "usesBlockingMainLoop": false,
+    "portability": "not-supported",
+    "blockers": [
+      {
+        "id": "no-c-cpp",
+        "what": "No C or C++ source files were found.",
+        "fix": "This MVP ports C and C++ programs. Other languages are not supported yet."
+      }
+    ],
+    "notes": []
+  },
+  "build": null,
+  "package": null,
+  "verify": null,
+  "changes": [],
+  "patchFile": null,
+  "limits": [
+    "hexyl is written in Rust. This MVP ports C and C++ programs that use SDL2, raylib, or plain stdio. Other languages are out of scope."
+  ],
+  "commands": []
+}

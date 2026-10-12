@@ -1,0 +1,121 @@
+{
+  "title": "SDL Tetris ported to the browser",
+  "generatedAt": "2026-10-12T20:13:25.126Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": ".work/sdl-tetris",
+    "resolvedPath": "/Users/abelyagubyan/Downloads/browser-port/.work/sdl-tetris",
+    "repo": null,
+    "language": "c",
+    "buildSystem": "make",
+    "appKind": "sdl2",
+    "libraries": [
+      {
+        "name": "SDL2",
+        "evidence": "included in src/graphics.c"
+      },
+      {
+        "name": "SDL2_ttf",
+        "evidence": "included in src/graphics.c"
+      }
+    ],
+    "assets": [
+      "preview.gif",
+      "src/assets/font.ttf"
+    ],
+    "entryPoint": "src/main.c",
+    "sourceFiles": [
+      "src/game.c",
+      "src/game.h",
+      "src/graphics.c",
+      "src/graphics.h",
+      "src/input.c",
+      "src/input.h",
+      "src/main.c"
+    ],
+    "usesBlockingMainLoop": false,
+    "portability": "likely",
+    "blockers": [],
+    "notes": []
+  },
+  "build": {
+    "ok": true,
+    "outDir": "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/build",
+    "jsFile": "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/build/index.js",
+    "wasmFile": "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/build/index.wasm",
+    "dataFile": "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/build/index.data",
+    "flags": [
+      "-O2",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sUSE_SDL=2",
+      "-sUSE_SDL_TTF=2",
+      "--preload-file",
+      "src/assets/font.ttf@font.ttf"
+    ],
+    "usedAsyncify": false,
+    "usedSetMainLoop": false,
+    "commands": [
+      {
+        "label": "build:emcc",
+        "command": "emcc src/game.c src/graphics.c src/input.c src/main.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 --preload-file src/assets/font.ttf@font.ttf -o /Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/build/index.js",
+        "cwd": ".work/sdl-tetris",
+        "exitCode": 0,
+        "durationMs": 144195,
+        "stdoutTail": "",
+        "stderrTail": "system_libs:INFO: compiled 55 inputs in 65.50s\ncache:INFO:  - ok\nports:INFO: retrieving port: sdl2 from https://github.com/libsdl-org/SDL/archive/release-2.32.10.zip\nports:INFO: unpacking port: sdl2\ncache:INFO: generating port: sysroot/lib/wasm32-emscripten/libSDL2.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2.a\" for subsequent builds)\nsystem_libs:INFO: compiled 119 inputs in 14.09s\ncache:INFO:  - ok\nports:INFO: retrieving port: sdl2_ttf from https://github.com/libsdl-org/SDL_ttf/archive/release-2.20.2.zip\nports:INFO: unpacking port: sdl2_ttf\ncache:INFO: generating port: sysroot/lib/wasm32-emscripten/libSDL2_ttf.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2_ttf.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1 inputs in 1.71s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libGL-getprocaddr.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libGL-getprocaddr.a\" for subsequent builds)\nsystem_libs:INFO: compiled 4 inputs in 0.84s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libal.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libal.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1 inputs in 0.51s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libhtml5.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libhtml5.a\" for subsequent builds)\nsystem_libs:INFO: compiled 5 inputs in 0.45s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libstubs.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libstubs.a\" for subsequent builds)\nsystem_libs:INFO: compiled 2 inputs in 0.28s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libnoexit.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libnoexit.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1 inputs in 0.21s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libc.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libc.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1074 inputs in 18.27s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libdlmalloc.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libdlmalloc.a\" for subsequent builds)\nsystem_libs:INFO: compiled 2 inputs in 0.90s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libclang_rt.builtins.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libclang_rt.builtins.a\" for subsequent builds)\nsystem_libs:INFO: compiled 184 inputs in 3.92s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libsockets.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libsockets.a\" for subsequent builds)\nsystem_libs:INFO: compiled 27 inputs in 1.42s\ncache:INFO:  - ok"
+      }
+    ]
+  },
+  "package": {
+    "siteDir": "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/site",
+    "indexHtml": "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/site/index.html",
+    "files": [
+      "LICENSE",
+      "index.data",
+      "index.html",
+      "index.js",
+      "index.wasm"
+    ],
+    "mode": "canvas"
+  },
+  "verify": {
+    "ok": true,
+    "mode": "canvas",
+    "consoleErrors": [],
+    "canvasNonBlank": true,
+    "fps": 57.3,
+    "frames": 172,
+    "durationMs": 3003,
+    "screenshots": [
+      "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/evidence/screenshots/canvas-start.png",
+      "/Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/evidence/screenshots/canvas-end.png"
+    ],
+    "keySteps": [],
+    "notes": [
+      "Canvas content changed across the observation window."
+    ]
+  },
+  "changes": [
+    "No source edits were needed: the upstream project already guards its main loop with __EMSCRIPTEN__ and calls emscripten_set_main_loop."
+  ],
+  "patchFile": null,
+  "limits": [
+    "Keyboard controls work when the canvas has focus (click it first).",
+    "Audio is not used by this game, so no audio path was exercised."
+  ],
+  "commands": [
+    {
+      "label": "build:emcc",
+      "command": "emcc src/game.c src/graphics.c src/input.c src/main.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 --preload-file src/assets/font.ttf@font.ttf -o /Users/abelyagubyan/Downloads/browser-port/examples/sdl-tetris/work/build/index.js",
+      "cwd": ".work/sdl-tetris",
+      "exitCode": 0,
+      "durationMs": 144195,
+      "stdoutTail": "",
+      "stderrTail": "system_libs:INFO: compiled 55 inputs in 65.50s\ncache:INFO:  - ok\nports:INFO: retrieving port: sdl2 from https://github.com/libsdl-org/SDL/archive/release-2.32.10.zip\nports:INFO: unpacking port: sdl2\ncache:INFO: generating port: sysroot/lib/wasm32-emscripten/libSDL2.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2.a\" for subsequent builds)\nsystem_libs:INFO: compiled 119 inputs in 14.09s\ncache:INFO:  - ok\nports:INFO: retrieving port: sdl2_ttf from https://github.com/libsdl-org/SDL_ttf/archive/release-2.20.2.zip\nports:INFO: unpacking port: sdl2_ttf\ncache:INFO: generating port: sysroot/lib/wasm32-emscripten/libSDL2_ttf.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2_ttf.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1 inputs in 1.71s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libGL-getprocaddr.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libGL-getprocaddr.a\" for subsequent builds)\nsystem_libs:INFO: compiled 4 inputs in 0.84s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libal.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libal.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1 inputs in 0.51s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libhtml5.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libhtml5.a\" for subsequent builds)\nsystem_libs:INFO: compiled 5 inputs in 0.45s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libstubs.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libstubs.a\" for subsequent builds)\nsystem_libs:INFO: compiled 2 inputs in 0.28s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libnoexit.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libnoexit.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1 inputs in 0.21s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libc.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libc.a\" for subsequent builds)\nsystem_libs:INFO: compiled 1074 inputs in 18.27s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libdlmalloc.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libdlmalloc.a\" for subsequent builds)\nsystem_libs:INFO: compiled 2 inputs in 0.90s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libclang_rt.builtins.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libclang_rt.builtins.a\" for subsequent builds)\nsystem_libs:INFO: compiled 184 inputs in 3.92s\ncache:INFO:  - ok\ncache:INFO: generating system library: sysroot/lib/wasm32-emscripten/libsockets.a... (this will be cached in \"/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libsockets.a\" for subsequent builds)\nsystem_libs:INFO: compiled 27 inputs in 1.42s\ncache:INFO:  - ok"
+    }
+  ]
+}

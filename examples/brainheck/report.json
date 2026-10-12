@@ -1,0 +1,99 @@
+{
+  "title": "brainheck ported to the browser",
+  "generatedAt": "2026-10-12T20:15:27.872Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": ".work/brainheck",
+    "resolvedPath": "/Users/abelyagubyan/Downloads/browser-port/.work/brainheck",
+    "repo": null,
+    "language": "c",
+    "buildSystem": "make",
+    "appKind": "stdio",
+    "libraries": [],
+    "assets": [
+      "mandelbrot.png"
+    ],
+    "entryPoint": "brainheck.c",
+    "sourceFiles": [
+      "brainheck.c"
+    ],
+    "usesBlockingMainLoop": false,
+    "portability": "likely",
+    "blockers": [],
+    "notes": []
+  },
+  "build": {
+    "ok": true,
+    "outDir": "/Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/build",
+    "jsFile": "/Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/build/index.js",
+    "wasmFile": "/Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/build/index.wasm",
+    "dataFile": null,
+    "flags": [
+      "-O2",
+      "-sALLOW_MEMORY_GROWTH=1"
+    ],
+    "usedAsyncify": false,
+    "usedSetMainLoop": false,
+    "commands": [
+      {
+        "label": "build:emcc",
+        "command": "emcc brainheck.c -O2 -sALLOW_MEMORY_GROWTH=1 -o /Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/build/index.js",
+        "cwd": ".work/brainheck",
+        "exitCode": 0,
+        "durationMs": 1790,
+        "stdoutTail": "",
+        "stderrTail": ""
+      }
+    ]
+  },
+  "package": {
+    "siteDir": "/Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/site",
+    "indexHtml": "/Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/site/index.html",
+    "files": [
+      "LICENSE",
+      "index.html",
+      "index.js",
+      "index.wasm"
+    ],
+    "mode": "stdio"
+  },
+  "verify": {
+    "ok": true,
+    "mode": "stdio",
+    "consoleErrors": [],
+    "screenshots": [
+      "/Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/evidence/screenshots/stdio-case-0.png"
+    ],
+    "stdioComparison": [
+      {
+        "input": "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.",
+        "nativeOutput": "Hello World!",
+        "browserOutput": "Hello World!",
+        "match": true
+      }
+    ],
+    "notes": []
+  },
+  "changes": [
+    "Added read_all() and changed main() to read the Brainfuck program from stdin when no file argument is given, so it runs as a stdin to stdout filter in the browser."
+  ],
+  "patchFile": "examples/brainheck/work/changes.patch",
+  "limits": [
+    "Programs that use the ',' input command cannot also receive runtime input through stdin in this build, because stdin is consumed as the program source. The included mandelbrot.bf needs no input and works, but is compute heavy (about 26 seconds)."
+  ],
+  "commands": [
+    {
+      "label": "build:emcc",
+      "command": "emcc brainheck.c -O2 -sALLOW_MEMORY_GROWTH=1 -o /Users/abelyagubyan/Downloads/browser-port/examples/brainheck/work/build/index.js",
+      "cwd": ".work/brainheck",
+      "exitCode": 0,
+      "durationMs": 1790,
+      "stdoutTail": "",
+      "stderrTail": ""
+    }
+  ]
+}
