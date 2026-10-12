@@ -50,7 +50,7 @@ describe("shells", () => {
     expect(html).toContain("window.__bp");
     expect(html).toContain('src="index.js"');
     expect(html).toContain("requestFullscreen");
-    expect(html).not.toMatch(/[–—]/); // no en or em dashes
+    expect(/[\u2013\u2014]/.test(html)).toBe(false); // no en or em dashes
   });
 
   it("stdio shell reads scripted input and shows a terminal", () => {
