@@ -7,3 +7,5 @@ coverage/
 # Work directories created at runtime
 .browser-port/
 tmp/
+# Scratch clones and native builds used during local validation
+.work/
