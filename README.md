@@ -9,9 +9,11 @@
 [![Node 20+](https://img.shields.io/badge/node-20%2B-339933?logo=nodedotjs&logoColor=white)](package.json)
 [![MCP server](https://img.shields.io/badge/MCP-server-5c4ee5)](#use-it-with-your-agent)
 
-<img src="docs/demo.gif" alt="SDL Tetris, a C game, running in the browser after browser-port compiled it to WebAssembly and played it in headless Chrome" width="560" />
+<a href="https://abelo9996.github.io/browser-port/"><img src="docs/demo.gif" alt="SDL Tetris, a C game, running in the browser after browser-port compiled it to WebAssembly and played it in headless Chrome" width="560" /></a>
 
 <sub>A C + SDL2 Tetris clone, built to WebAssembly by browser-port and played in headless Chrome during <code>verify</code>.</sub>
+
+**Play the ported programs in your browser: [SDL Tetris](https://abelo9996.github.io/browser-port/sdl-tetris/) (C + SDL2) · [brainheck](https://abelo9996.github.io/browser-port/brainheck/) (C terminal program)**
 
 [Try it](#try-it) · [Use it with your agent](#use-it-with-your-agent) · [Real ports](#real-ports) · [How it works](#how-it-works) · [Limits](#what-it-cant-do)
 
