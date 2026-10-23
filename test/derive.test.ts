@@ -35,20 +35,20 @@ describe("deriveAssets", () => {
   it("preloads a referenced asset directory and detects png", () => {
     const r = deriveAssets(
       ["assets/player.png", "./assets/tiles.png"],
-      new Set(["assets/player.png", "assets/tiles.png"]),
+      new Map([["player.png", "assets/player.png"], ["tiles.png", "assets/tiles.png"]]),
       new Set(["assets"]),
     );
     expect(r.preloadDirs).toEqual(["assets"]);
     expect(r.imageFormats).toContain("png");
   });
 
-  it("maps a bare asset filename to the virtual root", () => {
-    const r = deriveAssets(["font.ttf"], new Set(["font.ttf"]), new Set());
-    expect(r.preloadMap).toEqual(["font.ttf@/font.ttf"]);
+  it("maps a bare asset filename to its real path at the virtual root", () => {
+    const r = deriveAssets(["font.ttf"], new Map([["font.ttf", "src/assets/font.ttf"]]), new Set());
+    expect(r.preloadMap).toEqual(["src/assets/font.ttf@/font.ttf"]);
   });
 
   it("adds jpg to image formats", () => {
-    const r = deriveAssets(["img/bg.jpg"], new Set(["img/bg.jpg"]), new Set(["img"]));
+    const r = deriveAssets(["img/bg.jpg"], new Map([["bg.jpg", "img/bg.jpg"]]), new Set(["img"]));
     expect(r.imageFormats).toContain("jpg");
   });
 });

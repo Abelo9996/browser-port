@@ -110,9 +110,10 @@ export async function port(source: string, options: PortOptions = {}): Promise<P
     imageFormats: plan.imageFormats,
     includeDirs: plan.includeDirs,
     useAsyncify: mode === "canvas" && report.usesBlockingMainLoop,
+    extraFlags: [],
   };
 
-  const maxAttempts = options.maxAttempts ?? 6;
+  const maxAttempts = options.maxAttempts ?? 8;
   const attempts: PortAttempt[] = [];
   const applied = new Set<string>();
   let lastBuild: BuildResult | null = null;
@@ -127,7 +128,7 @@ export async function port(source: string, options: PortOptions = {}): Promise<P
     if (!b.ok) {
       const err = lastStderr(b);
       attempts.push({ n, fix: lastFix(applied), sources: [...spec.sources], libs: [...libs], flags: b.flags, asyncify: Boolean(spec.useAsyncify), phase: "build", ok: false, errorTail: err.slice(-800) });
-      const fix = diagnoseBuild(err, { libs, sourcesComplete });
+      const fix = diagnoseBuild(err, { libs, sourcesComplete, extraFlags: spec.extraFlags ?? [] });
       if (!fix || applied.has(fix.id)) {
         emit(`build failed, no further fix`);
         return finishFail({ ...base }, attempts, "build did not succeed. Last error:\n" + err.slice(-400));
@@ -135,6 +136,7 @@ export async function port(source: string, options: PortOptions = {}): Promise<P
       emit(`fix: ${fix.reason}`);
       applied.add(fix.id);
       if (fix.addLib && !libs.includes(fix.addLib)) libs.push(fix.addLib);
+      if (fix.addFlags) spec.extraFlags = [...(spec.extraFlags ?? []), ...fix.addFlags];
       if (fix.compileAllSources) spec.sources = [...plan.allSources];
       continue;
     }
@@ -153,6 +155,16 @@ export async function port(source: string, options: PortOptions = {}): Promise<P
       base.attempts = attempts;
       emit(`verified${v.fps != null ? ` at ${v.fps} fps` : ""}`);
       return base;
+    }
+
+    // A wasm trap (unreachable / out-of-bounds / abort) in an otherwise working
+    // build is most often the 64 KB default stack overflowing. Give it room.
+    const trapped = v.consoleErrors.some((e) => /unreachable|out of bounds|table index|Aborted\b|RuntimeError/i.test(e));
+    if (trapped && !applied.has("stack-size")) {
+      emit(`verify hit a wasm trap; retrying with a larger stack`);
+      applied.add("stack-size");
+      spec.extraFlags = [...(spec.extraFlags ?? []), "-sSTACK_SIZE=4194304"];
+      continue;
     }
 
     // A canvas that never drew a frame is the signature of a blocking loop that

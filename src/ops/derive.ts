@@ -1,5 +1,5 @@
 import path from "node:path";
-import { readIfExists } from "../util/scan.js";
+import { isCompilable, readIfExists } from "../util/scan.js";
 
 /** The build plan derived from a project, used to drive the first build attempt. */
 export interface DerivedPlan {
@@ -19,12 +19,6 @@ export interface DerivedPlan {
 }
 
 const HEADER_EXT = new Set([".h", ".hpp", ".hxx", ".hh"]);
-
-const COMPILE_EXT = new Set([".c", ".cc", ".cpp", ".cxx"]);
-
-export function isCompilable(rel: string): boolean {
-  return COMPILE_EXT.has(path.extname(rel).toLowerCase());
-}
 
 /** Directories whose presence usually means "game assets live here". */
 const ASSET_DIR_NAMES = new Set([
@@ -93,7 +87,7 @@ async function sourcesByIncludes(
 
 const LOADER_RE =
   /\b(?:fopen|IMG_Load(?:Texture)?|IMG_LoadTexture_RW|Mix_LoadWAV|Mix_LoadMUS|Mix_LoadMUS_RW|TTF_OpenFont|SDL_LoadBMP|SDL_RWFromFile|stbi_load|LoadTexture|LoadImage|LoadSound|LoadMusicStream|LoadFont|LoadFontEx)\s*\(\s*"([^"]+)"/g;
-const ANY_ASSET_RE = /"([^"\s]+\.(?:png|jpe?g|bmp|gif|tga|wav|ogg|mp3|ttf|otf|fnt|tmx|glsl|vert|frag|dat|lvl|map))"/gi;
+const ANY_ASSET_RE = /"([^"\s]+\.(?:png|jpe?g|bmp|gif|tga|wav|ogg|mp3|flac|mod|xm|ttf|otf|fnt|tmx|glsl|vert|frag|dat|lvl|map))"/gi;
 
 /**
  * Work out which asset directories and files the program loads, so they can be
@@ -103,11 +97,12 @@ const ANY_ASSET_RE = /"([^"\s]+\.(?:png|jpe?g|bmp|gif|tga|wav|ogg|mp3|ttf|otf|fn
  */
 export function deriveAssets(
   referencedPaths: string[],
-  allFilesLower: Set<string>,
+  /** Lowercased basename -> the real repo-relative path of that file. */
+  fileByBasenameLower: Map<string, string>,
   topDirsLower: Set<string>,
 ): { preloadDirs: string[]; preloadMap: string[]; imageFormats: string[] } {
   const dirs = new Set<string>();
-  const maps = new Map<string, string>();
+  const maps = new Set<string>();
   const formats = new Set<string>();
 
   for (const raw of referencedPaths) {
@@ -121,14 +116,16 @@ export function deriveAssets(
       const top = ref.split("/")[0]!;
       if (topDirsLower.has(top.toLowerCase())) dirs.add(top);
     } else {
-      // A bare filename: preload the real file at the same virtual name.
-      if (allFilesLower.has(ref.toLowerCase())) maps.set(ref, `${ref}@/${ref}`);
+      // A bare filename: preload the real file at that virtual name so the
+      // program's fopen("name") resolves from the working directory.
+      const real = fileByBasenameLower.get(ref.toLowerCase());
+      if (real) maps.add(`${real}@/${ref}`);
     }
   }
 
   return {
     preloadDirs: [...dirs].sort(),
-    preloadMap: [...maps.values()].sort(),
+    preloadMap: [...maps].sort(),
     imageFormats: [...formats].sort(),
   };
 }
@@ -165,13 +162,10 @@ export async function derivePlan(
   if (sources.length === 0) sources = allSources;
 
   // Scan the chosen sources for asset references.
-  const topDirsLower = new Set<string>();
-  const allFilesLower = new Set<string>();
+  const fileByBasenameLower = new Map<string, string>();
   for (const f of allFiles) {
-    allFilesLower.add(f.toLowerCase());
-    allFilesLower.add(path.basename(f).toLowerCase());
-    const top = f.split("/")[0]!;
-    if (top !== f && ASSET_DIR_NAMES.has(top.toLowerCase())) topDirsLower.add(top.toLowerCase());
+    const base = path.basename(f).toLowerCase();
+    if (!fileByBasenameLower.has(base)) fileByBasenameLower.set(base, f);
   }
 
   const referenced: string[] = [];
@@ -192,7 +186,7 @@ export async function derivePlan(
     if (top !== f && ASSET_DIR_NAMES.has(top.toLowerCase())) existingTopDirs.add(top);
   }
 
-  const assets = deriveAssets(referenced, allFilesLower, new Set([...existingTopDirs].map((d) => d.toLowerCase())));
+  const assets = deriveAssets(referenced, fileByBasenameLower, new Set([...existingTopDirs].map((d) => d.toLowerCase())));
   const preloadDirs = new Set(assets.preloadDirs);
   for (const d of existingTopDirs) preloadDirs.add(d);
 

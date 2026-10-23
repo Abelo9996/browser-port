@@ -12,7 +12,7 @@ import type {
   Portability,
 } from "../types.js";
 import { run } from "../util/exec.js";
-import { isAssetFile, isCodeFile, readIfExists, walk } from "../util/scan.js";
+import { isAssetFile, isCodeFile, isCompilable, readIfExists, walk } from "../util/scan.js";
 
 export interface InspectOptions {
   /** Where to clone into when the source is a URL. Defaults to a temp dir. */
@@ -188,7 +188,9 @@ export async function detect(resolvedPath: string): Promise<Detection> {
         refusalMatches.set(rule.id, rel);
       }
     }
-    if (!entryPoint && mainRe.test(content)) entryPoint = rel;
+    // Only a compilable source can be the entry point; a vendored single-header
+    // library may contain its own main() in example code and must not win.
+    if (!entryPoint && isCompilable(rel) && mainRe.test(content)) entryPoint = rel;
     if (sdlMainLoopRe.test(content) || raylibMainLoopRe.test(content)) usesBlockingMainLoop = true;
     if (fsWriteRe.test(content)) usesFilesystemWrites = true;
   }

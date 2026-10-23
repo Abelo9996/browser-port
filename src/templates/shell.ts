@@ -46,6 +46,12 @@ const BP_RUNTIME = `
       el.style.display = "block";
       el.textContent = (el.textContent ? el.textContent + "\\n" : "") + msg;
     }
+    // A program's stderr carries INFO/DEBUG/WARNING logs as well as real
+    // errors. Only treat error-level lines as errors; the rest are just output.
+    function bpIsErrorLine(t) {
+      if (/^\\s*(info|debug|note|notice|warning|warn|trace)\\b|^\\s*\\[(info|debug|warn)/i.test(t)) return false;
+      return /\\b(error|fatal|abort|assert|exception|unreachable|segmentation|panic|undefined symbol)\\b/i.test(t);
+    }
     window.addEventListener("error", function (e) { bpError(e.message || "error"); });
     window.addEventListener("unhandledrejection", function (e) { bpError("promise: " + (e.reason && e.reason.message || e.reason)); });
     function bpStatus(text) {
@@ -86,7 +92,7 @@ export function canvasShell(title: string, jsName: string): string {
     var Module = {
       canvas: canvas,
       print: function (t) { window.__bp.stdout += t + "\\n"; },
-      printErr: function (t) { if (!/^(dylink|warning)/i.test(t)) bpError(t); },
+      printErr: function (t) { window.__bp.stdout += t + "\\n"; if (bpIsErrorLine(t)) bpError(t); },
       setStatus: function (t) {
         bpStatus(t || "Running");
         var m = t && t.match(/\\((\\d+(?:\\.\\d+)?)\\/(\\d+(?:\\.\\d+)?)\\)/);
@@ -152,7 +158,7 @@ export function stdioShell(title: string, jsName: string): string {
     });
     var Module = {
       print: function (t) { window.__bp.stdout += t + "\\n"; append(t + "\\n"); },
-      printErr: function (t) { if (/error/i.test(t)) bpError(t); append(t + "\\n"); },
+      printErr: function (t) { if (bpIsErrorLine(t)) bpError(t); append(t + "\\n"); },
       stdin: function () { return inputPos < inputQueue.length ? inputQueue[inputPos++] : null; },
       preRun: [],
       setStatus: function (t) {

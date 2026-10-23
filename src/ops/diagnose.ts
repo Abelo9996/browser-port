@@ -10,6 +10,8 @@ export interface DiagnoseState {
   libs: string[];
   /** True once every project source is already being compiled. */
   sourcesComplete: boolean;
+  /** Extra emcc flags already applied, so a flag fix is not retried forever. */
+  extraFlags: string[];
 }
 
 export interface FixAction {
@@ -17,6 +19,8 @@ export interface FixAction {
   reason: string;
   /** A port library to enable, for example "SDL2_image". */
   addLib?: string;
+  /** Extra emcc flags to add (kept together, e.g. ["-include", "emscripten.h"]). */
+  addFlags?: string[];
   /** Expand the compile set to every project source. */
   compileAllSources?: boolean;
 }
@@ -73,6 +77,31 @@ export function diagnoseBuild(stderr: string, state: DiagnoseState): FixAction |
         addLib: rule.lib,
       };
     }
+  }
+
+  // Code that calls emscripten_* helpers (emscripten_set_main_loop and friends)
+  // without including <emscripten.h> both errors at compile (undeclared) and,
+  // if that is merely downgraded, mismatches signatures at link because wasm is
+  // strictly typed. Force-including the header declares them correctly.
+  const callsEmscripten = /(implicit declaration of function|call to undeclared function) '?emscripten_/i.test(stderr) || /function signature mismatch: emscripten_/i.test(stderr);
+  if (callsEmscripten && !state.extraFlags.includes("emscripten.h")) {
+    return {
+      id: "add-flag:include-emscripten",
+      reason: "The code calls emscripten_* helpers without including <emscripten.h>; force-including it declares them with the right signatures.",
+      addFlags: ["-include", "emscripten.h"],
+    };
+  }
+
+  // Any other implicit function declaration (a hard error in modern clang, for
+  // pre-C99 idioms) is downgraded so the C compiles; the symbol resolves at
+  // link on this wasm32 target.
+  const IMPLICIT_FLAG = "-Wno-implicit-function-declaration";
+  if (/implicit (function )?declaration|call to undeclared function/i.test(stderr) && !state.extraFlags.includes(IMPLICIT_FLAG)) {
+    return {
+      id: `add-flag:${IMPLICIT_FLAG}`,
+      reason: "An implicit function declaration is a hard error in modern clang; downgrading it so the C compiles.",
+      addFlags: [IMPLICIT_FLAG],
+    };
   }
 
   // A leftover undefined symbol that is not from an SDL add-on usually means a

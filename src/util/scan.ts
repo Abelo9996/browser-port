@@ -1,7 +1,15 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-const SKIP_DIRS = new Set([".git", "node_modules", "build", "dist", ".cache", "__pycache__"]);
+// Vendored dependency and build directories. Skipping them keeps detection on
+// the project's own code: a bundled copy of SDL2 (which references X11/Cocoa in
+// its headers) must not trigger a native-windowing refusal, and its sources
+// must not be compiled since Emscripten supplies the port.
+const SKIP_DIRS = new Set([
+  ".git", "node_modules", "build", "dist", ".cache", "__pycache__",
+  "lib", "libs", "vendor", "vendored", "third_party", "thirdparty",
+  "external", "extern", "deps", "subprojects", "contrib",
+]);
 
 /** Walk a directory tree, returning repo-relative file paths. */
 export async function walk(root: string, maxFiles = 5000): Promise<string[]> {
@@ -18,7 +26,7 @@ export async function walk(root: string, maxFiles = 5000): Promise<string[]> {
       if (out.length >= maxFiles) return;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (SKIP_DIRS.has(entry.name)) continue;
+        if (SKIP_DIRS.has(entry.name.toLowerCase())) continue;
         await recurse(full);
       } else if (entry.isFile()) {
         out.push(path.relative(root, full));
@@ -46,6 +54,13 @@ const CODE_EXT = new Set([".c", ".cc", ".cpp", ".cxx", ".h", ".hpp", ".hxx"]);
 
 export function isCodeFile(rel: string): boolean {
   return CODE_EXT.has(path.extname(rel).toLowerCase());
+}
+
+const COMPILE_EXT = new Set([".c", ".cc", ".cpp", ".cxx"]);
+
+/** A translation unit the compiler can take directly (a source, not a header). */
+export function isCompilable(rel: string): boolean {
+  return COMPILE_EXT.has(path.extname(rel).toLowerCase());
 }
 
 const ASSET_EXT = new Set([
