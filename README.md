@@ -97,16 +97,20 @@ the evidence bundle, screenshots, and the runnable site with the upstream licens
 | --- | --- | --- |
 | [packt-shmup](examples/packt-shmup) | C++ shoot-em-up, SDL2 + SDL2_image | `port` in one command: 60 fps. First build linked only `main.cpp` and failed; it recompiled all seven sources and linked |
 | [basque](examples/basque) | C top-down 2D engine, SDL2 + image/mixer/ttf | `port` in one command: 50.1 fps, no manual flags |
+| [saanp-snake](examples/saanp-snake) | C snake, SDL2 + SDL2_ttf, blocking loop | `port` in one command: made playable by a build-time yield shim (no source edit) |
+| [pong](examples/pong) | C++ Pong, SDL2 + SDL2_ttf, blocking loop | `port` in one command: made playable by the yield shim; its vendored SDL2 copy was ignored |
 | [sdl-tetris](examples/sdl-tetris) | C game, SDL2 + SDL2_ttf | Plays in the browser, about 55 to 57 fps, no console errors |
 | [brainheck](examples/brainheck) | C terminal program (stdin/stdout) | Browser output matched the native build for the same inputs |
 | [hexyl](examples/not-supported/hexyl) | Rust hex viewer | "Not supported yet", with the reason |
 
 Honest notes on the limits of one command: it ports games whose loop is web-ready
-(`emscripten_set_main_loop`) or yields through `SDL_Delay` under ASYNCIFY. A game that busy-waits in a
-plain `while` loop with no yield (common in desktop code) builds but will not run until its loop is
-refactored, and `port` says so rather than hanging. Programs that fail to compile upstream, that need a
-codec Emscripten does not ship (for example FLAC in SDL2_mixer), or that trap at runtime are reported
-with the reason, not papered over.
+(`emscripten_set_main_loop`), yields through `SDL_Delay` under ASYNCIFY, or runs a plain blocking
+`while` loop that it makes yield with a build-time shim (ASYNCIFY plus wasm-ld `--wrap` on the SDL
+present and poll calls, so each frame and each idle poll returns control to the browser; no source
+edit). What one command still cannot do: programs that fail to compile upstream, that need a codec
+Emscripten does not ship (for example FLAC in SDL2_mixer), or that trap at runtime are reported with
+the reason, not papered over. A loop that neither presents nor polls events each iteration has no
+point to yield at and would still need a hand edit.
 
 ## How it works
 
@@ -138,9 +142,10 @@ Every step is a CLI subcommand (add `--json`) and an MCP tool.
   (Qt, GTK, wxWidgets), native X11/GLX/WGL/Cocoa windowing, the Win32 GUI, raw sockets, and threads get
   an honest "not supported yet" with the reason. OpenGL used through SDL2 or raylib is fine.
 - One command auto-fixes build failures (missing SDL port libraries, uncompiled sources, a missing
-  `<emscripten.h>`, implicit-declaration errors, a small stack) and wraps a blocking loop in ASYNCIFY,
-  but it does not rewrite source. A game that busy-waits with no yield needs its loop refactored to
-  `emscripten_set_main_loop` by hand first.
+  `<emscripten.h>`, implicit-declaration errors, a small stack) and makes a blocking loop yield with a
+  build-time shim (ASYNCIFY plus wasm-ld `--wrap` on the SDL present and poll calls), without rewriting
+  source. A loop that neither presents a frame nor polls events each iteration has no yield point and
+  still needs a hand edit to `emscripten_set_main_loop`.
 - Codecs Emscripten does not bundle (for example FLAC in SDL2_mixer) are not available.
 - A program that reads all of stdin as its input can't also take interactive input in the terminal page.
 

@@ -22,8 +22,10 @@ Prefer `port <github-url|path>`. It inspects, derives the sources (from a CMake 
 the file with `main` plus its local includes), the libraries, the app kind, and the asset preload map,
 then builds, packages, and verifies in headless Chrome in a single step. On a build failure it reads
 the error and applies a known fix in order (enable an SDL port library, compile all project sources,
-force-include `<emscripten.h>`, downgrade an implicit-declaration error, grow the stack, or wrap a
-blocking loop in ASYNCIFY), retrying a bounded number of times and recording each attempt.
+force-include `<emscripten.h>`, downgrade an implicit-declaration error, grow the stack, or link a
+build-time yield shim that makes a blocking loop return control to the browser each frame via ASYNCIFY
+plus wasm-ld `--wrap` on the SDL present and poll calls), retrying a bounded number of times and
+recording each attempt.
 
 ```
 port https://github.com/owner/game
@@ -35,8 +37,9 @@ read `blocker` and the `evidence/` folder for the real cause. Serve the `siteDir
 to give the user a link.
 
 Drop to the individual tools below only when `port` cannot finish on its own and you need to hand-edit
-the source between steps (for example, refactoring a blocking `while` loop into
-`emscripten_set_main_loop`, which `port` will not do for you).
+the source between steps. `port` already makes an ordinary blocking loop yield with its shim; the hand
+edit is for the rarer loop that neither presents a frame nor polls events each iteration, which has no
+yield point for the shim to hook and needs refactoring to `emscripten_set_main_loop`.
 
 ## The manual loop
 

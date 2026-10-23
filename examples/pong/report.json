@@ -1,0 +1,166 @@
+{
+  "title": "pong (MIT, SDL2) ported with the yield shim",
+  "generatedAt": "2026-10-23T08:38:29.708Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": "https://github.com/ucx15/pong",
+    "resolvedPath": "/tmp/ports/pong/source",
+    "repo": {
+      "url": "https://github.com/ucx15/pong",
+      "commit": "7f9b91a3af821f23f6e7c091238b0f6cb2e1787f"
+    },
+    "language": "cpp",
+    "buildSystem": "plain",
+    "appKind": "sdl2",
+    "libraries": [
+      {
+        "name": "SDL2",
+        "evidence": "included in Src/Include/paddle.hpp"
+      },
+      {
+        "name": "SDL2_ttf",
+        "evidence": "included in Src/Include/text.hpp"
+      }
+    ],
+    "assets": [
+      ".vscode/c_cpp_properties.json",
+      ".vscode/settings.json",
+      "Imgs/play.png",
+      "Imgs/win.png",
+      "Res/Brickshapers.ttf",
+      "Res/logo.png"
+    ],
+    "entryPoint": "Src/main.cpp",
+    "sourceFiles": [
+      "Src/Include/paddle.hpp",
+      "Src/Include/puck.hpp",
+      "Src/Include/settings.hpp",
+      "Src/Include/text.hpp",
+      "Src/Include/utils.hpp",
+      "Src/main.cpp",
+      "Src/paddle.cpp",
+      "Src/puck.cpp",
+      "Src/text.cpp",
+      "Src/utils.cpp"
+    ],
+    "usesBlockingMainLoop": true,
+    "portability": "needs-changes",
+    "blockers": [
+      {
+        "id": "blocking-main-loop",
+        "what": "Uses a blocking main loop.",
+        "fix": "Convert to emscripten_set_main_loop, or build with -sASYNCIFY so the blocking loop yields to the browser."
+      }
+    ],
+    "notes": []
+  },
+  "build": {
+    "ok": true,
+    "outDir": "/tmp/ports/pong/build",
+    "jsFile": "/tmp/ports/pong/build/index.js",
+    "wasmFile": "/tmp/ports/pong/build/index.wasm",
+    "dataFile": "/tmp/ports/pong/build/index.data",
+    "flags": [
+      "-O2",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sUSE_SDL=2",
+      "-sUSE_SDL_TTF=2",
+      "-sASYNCIFY",
+      "-ISrc/Include",
+      "--preload-file",
+      "Imgs@/Imgs",
+      "--preload-file",
+      "Res@/Res",
+      "-Wl,--wrap=SDL_PollEvent",
+      "-Wl,--wrap=SDL_RenderPresent",
+      "-Wl,--wrap=SDL_GL_SwapWindow",
+      "-Wl,--wrap=SDL_UpdateWindowSurface"
+    ],
+    "usedAsyncify": true,
+    "usedSetMainLoop": false,
+    "commands": [
+      {
+        "label": "build:em++",
+        "command": "em++ Src/main.cpp Src/utils.cpp Src/puck.cpp Src/paddle.cpp Src/text.cpp -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -ISrc/Include --preload-file Imgs@/Imgs --preload-file Res@/Res -o /tmp/ports/pong/build/index.js",
+        "cwd": "/tmp/ports/pong/source",
+        "exitCode": 0,
+        "durationMs": 4220,
+        "stdoutTail": "",
+        "stderrTail": "Src/main.cpp:180:39: warning: implicit conversion from 'int' to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]\n  180 |                 angle = 2.0f * M_PI * randF();\n      |                                       ^~~~~~~\nSrc/main.cpp:21:32: note: expanded from macro 'randF'\n   21 | #define randF() ((float)rand()/RAND_MAX)\n      |                               ~^~~~~~~~\n/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/include/stdlib.h:84:19: note: expanded from macro 'RAND_MAX'\n   84 | #define RAND_MAX (0x7fffffff)\n      |                   ^~~~~~~~~~\n1 warning generated.\nSrc/paddle.cpp:20:4: warning: assigning field to itself [-Wself-assign-field]\n   20 |         x = x;\n      |           ^\nSrc/paddle.cpp:21:4: warning: assigning field to itself [-Wself-assign-field]\n   21 |         y = y;\n      |           ^\n2 warnings generated."
+      },
+      {
+        "label": "build:em++",
+        "command": "em++ Src/main.cpp Src/utils.cpp Src/puck.cpp Src/paddle.cpp Src/text.cpp /tmp/ports/pong/build/__bp_yield_shim.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -ISrc/Include --preload-file Imgs@/Imgs --preload-file Res@/Res -Wl,--wrap=SDL_PollEvent -Wl,--wrap=SDL_RenderPresent -Wl,--wrap=SDL_GL_SwapWindow -Wl,--wrap=SDL_UpdateWindowSurface -o /tmp/ports/pong/build/index.js",
+        "cwd": "/tmp/ports/pong/source",
+        "exitCode": 0,
+        "durationMs": 4569,
+        "stdoutTail": "",
+        "stderrTail": "Src/main.cpp:180:39: warning: implicit conversion from 'int' to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]\n  180 |                 angle = 2.0f * M_PI * randF();\n      |                                       ^~~~~~~\nSrc/main.cpp:21:32: note: expanded from macro 'randF'\n   21 | #define randF() ((float)rand()/RAND_MAX)\n      |                               ~^~~~~~~~\n/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/include/stdlib.h:84:19: note: expanded from macro 'RAND_MAX'\n   84 | #define RAND_MAX (0x7fffffff)\n      |                   ^~~~~~~~~~\n1 warning generated.\nSrc/paddle.cpp:20:4: warning: assigning field to itself [-Wself-assign-field]\n   20 |         x = x;\n      |           ^\nSrc/paddle.cpp:21:4: warning: assigning field to itself [-Wself-assign-field]\n   21 |         y = y;\n      |           ^\n2 warnings generated.\nclang++: warning: treating 'c' input as 'c++' when in C++ mode, this behavior is deprecated [-Wdeprecated]"
+      }
+    ]
+  },
+  "package": {
+    "siteDir": "/tmp/ports/pong/site",
+    "indexHtml": "/tmp/ports/pong/site/index.html",
+    "files": [
+      "LICENSE",
+      "index.data",
+      "index.html",
+      "index.js",
+      "index.wasm"
+    ],
+    "mode": "canvas"
+  },
+  "verify": {
+    "ok": true,
+    "mode": "canvas",
+    "consoleErrors": [],
+    "canvasNonBlank": true,
+    "frames": 0,
+    "durationMs": 4411,
+    "screenshots": [
+      "/tmp/ports/pong/evidence/screenshots/canvas-start.png",
+      "/tmp/ports/pong/evidence/screenshots/canvas-end.png"
+    ],
+    "keySteps": [
+      {
+        "key": "Enter",
+        "afterMs": 0
+      },
+      {
+        "key": "Space",
+        "afterMs": 0
+      }
+    ],
+    "notes": [
+      "Canvas content changed across the observation window."
+    ]
+  },
+  "changes": [],
+  "patchFile": null,
+  "limits": [],
+  "commands": [
+    {
+      "label": "build:em++",
+      "command": "em++ Src/main.cpp Src/utils.cpp Src/puck.cpp Src/paddle.cpp Src/text.cpp -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -ISrc/Include --preload-file Imgs@/Imgs --preload-file Res@/Res -o /tmp/ports/pong/build/index.js",
+      "cwd": "/tmp/ports/pong/source",
+      "exitCode": 0,
+      "durationMs": 4220,
+      "stdoutTail": "",
+      "stderrTail": "Src/main.cpp:180:39: warning: implicit conversion from 'int' to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]\n  180 |                 angle = 2.0f * M_PI * randF();\n      |                                       ^~~~~~~\nSrc/main.cpp:21:32: note: expanded from macro 'randF'\n   21 | #define randF() ((float)rand()/RAND_MAX)\n      |                               ~^~~~~~~~\n/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/include/stdlib.h:84:19: note: expanded from macro 'RAND_MAX'\n   84 | #define RAND_MAX (0x7fffffff)\n      |                   ^~~~~~~~~~\n1 warning generated.\nSrc/paddle.cpp:20:4: warning: assigning field to itself [-Wself-assign-field]\n   20 |         x = x;\n      |           ^\nSrc/paddle.cpp:21:4: warning: assigning field to itself [-Wself-assign-field]\n   21 |         y = y;\n      |           ^\n2 warnings generated."
+    },
+    {
+      "label": "build:em++",
+      "command": "em++ Src/main.cpp Src/utils.cpp Src/puck.cpp Src/paddle.cpp Src/text.cpp /tmp/ports/pong/build/__bp_yield_shim.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -ISrc/Include --preload-file Imgs@/Imgs --preload-file Res@/Res -Wl,--wrap=SDL_PollEvent -Wl,--wrap=SDL_RenderPresent -Wl,--wrap=SDL_GL_SwapWindow -Wl,--wrap=SDL_UpdateWindowSurface -o /tmp/ports/pong/build/index.js",
+      "cwd": "/tmp/ports/pong/source",
+      "exitCode": 0,
+      "durationMs": 4569,
+      "stdoutTail": "",
+      "stderrTail": "Src/main.cpp:180:39: warning: implicit conversion from 'int' to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]\n  180 |                 angle = 2.0f * M_PI * randF();\n      |                                       ^~~~~~~\nSrc/main.cpp:21:32: note: expanded from macro 'randF'\n   21 | #define randF() ((float)rand()/RAND_MAX)\n      |                               ~^~~~~~~~\n/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/include/stdlib.h:84:19: note: expanded from macro 'RAND_MAX'\n   84 | #define RAND_MAX (0x7fffffff)\n      |                   ^~~~~~~~~~\n1 warning generated.\nSrc/paddle.cpp:20:4: warning: assigning field to itself [-Wself-assign-field]\n   20 |         x = x;\n      |           ^\nSrc/paddle.cpp:21:4: warning: assigning field to itself [-Wself-assign-field]\n   21 |         y = y;\n      |           ^\n2 warnings generated.\nclang++: warning: treating 'c' input as 'c++' when in C++ mode, this behavior is deprecated [-Wdeprecated]"
+    }
+  ]
+}

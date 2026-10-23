@@ -1,0 +1,155 @@
+{
+  "title": "saanp.vi (MIT, SDL2 snake) ported with the yield shim",
+  "generatedAt": "2026-10-23T08:38:29.498Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": "https://github.com/iambasantarai/saanp.vi",
+    "resolvedPath": "/tmp/ports/saanp/source",
+    "repo": {
+      "url": "https://github.com/iambasantarai/saanp.vi",
+      "commit": "2674a30217c7e865f2c44b541c28658b522b84fb"
+    },
+    "language": "c",
+    "buildSystem": "make",
+    "appKind": "sdl2",
+    "libraries": [
+      {
+        "name": "SDL2",
+        "evidence": "included in src/main.c"
+      },
+      {
+        "name": "SDL2_ttf",
+        "evidence": "included in src/main.c"
+      }
+    ],
+    "assets": [
+      "assets/PressStart2P-Regular.ttf"
+    ],
+    "entryPoint": "src/main.c",
+    "sourceFiles": [
+      "src/game.h",
+      "src/logic.c",
+      "src/logic.h",
+      "src/main.c",
+      "src/rendering.c",
+      "src/rendering.h"
+    ],
+    "usesBlockingMainLoop": true,
+    "portability": "needs-changes",
+    "blockers": [
+      {
+        "id": "blocking-main-loop",
+        "what": "Uses a blocking main loop.",
+        "fix": "Convert to emscripten_set_main_loop, or build with -sASYNCIFY so the blocking loop yields to the browser."
+      }
+    ],
+    "notes": []
+  },
+  "build": {
+    "ok": true,
+    "outDir": "/tmp/ports/saanp/build",
+    "jsFile": "/tmp/ports/saanp/build/index.js",
+    "wasmFile": "/tmp/ports/saanp/build/index.wasm",
+    "dataFile": "/tmp/ports/saanp/build/index.data",
+    "flags": [
+      "-O2",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sUSE_SDL=2",
+      "-sUSE_SDL_TTF=2",
+      "-sASYNCIFY",
+      "-Isrc",
+      "--preload-file",
+      "assets@/assets",
+      "-Wl,--wrap=SDL_PollEvent",
+      "-Wl,--wrap=SDL_RenderPresent",
+      "-Wl,--wrap=SDL_GL_SwapWindow",
+      "-Wl,--wrap=SDL_UpdateWindowSurface"
+    ],
+    "usedAsyncify": true,
+    "usedSetMainLoop": false,
+    "commands": [
+      {
+        "label": "build:emcc",
+        "command": "emcc src/main.c src/logic.c src/rendering.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -Isrc --preload-file assets@/assets -o /tmp/ports/saanp/build/index.js",
+        "cwd": "/tmp/ports/saanp/source",
+        "exitCode": 0,
+        "durationMs": 3432,
+        "stdoutTail": "",
+        "stderrTail": ""
+      },
+      {
+        "label": "build:emcc",
+        "command": "emcc src/main.c src/logic.c src/rendering.c /tmp/ports/saanp/build/__bp_yield_shim.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -Isrc --preload-file assets@/assets -Wl,--wrap=SDL_PollEvent -Wl,--wrap=SDL_RenderPresent -Wl,--wrap=SDL_GL_SwapWindow -Wl,--wrap=SDL_UpdateWindowSurface -o /tmp/ports/saanp/build/index.js",
+        "cwd": "/tmp/ports/saanp/source",
+        "exitCode": 0,
+        "durationMs": 3081,
+        "stdoutTail": "",
+        "stderrTail": ""
+      }
+    ]
+  },
+  "package": {
+    "siteDir": "/tmp/ports/saanp/site",
+    "indexHtml": "/tmp/ports/saanp/site/index.html",
+    "files": [
+      "LICENSE",
+      "index.data",
+      "index.html",
+      "index.js",
+      "index.wasm"
+    ],
+    "mode": "canvas"
+  },
+  "verify": {
+    "ok": true,
+    "mode": "canvas",
+    "consoleErrors": [],
+    "canvasNonBlank": true,
+    "frames": 0,
+    "durationMs": 4355,
+    "screenshots": [
+      "/tmp/ports/saanp/evidence/screenshots/canvas-start.png",
+      "/tmp/ports/saanp/evidence/screenshots/canvas-end.png"
+    ],
+    "keySteps": [
+      {
+        "key": "Enter",
+        "afterMs": 0
+      },
+      {
+        "key": "Space",
+        "afterMs": 0
+      }
+    ],
+    "notes": [
+      "Canvas content changed across the observation window."
+    ]
+  },
+  "changes": [],
+  "patchFile": null,
+  "limits": [],
+  "commands": [
+    {
+      "label": "build:emcc",
+      "command": "emcc src/main.c src/logic.c src/rendering.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -Isrc --preload-file assets@/assets -o /tmp/ports/saanp/build/index.js",
+      "cwd": "/tmp/ports/saanp/source",
+      "exitCode": 0,
+      "durationMs": 3432,
+      "stdoutTail": "",
+      "stderrTail": ""
+    },
+    {
+      "label": "build:emcc",
+      "command": "emcc src/main.c src/logic.c src/rendering.c /tmp/ports/saanp/build/__bp_yield_shim.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sASYNCIFY -Isrc --preload-file assets@/assets -Wl,--wrap=SDL_PollEvent -Wl,--wrap=SDL_RenderPresent -Wl,--wrap=SDL_GL_SwapWindow -Wl,--wrap=SDL_UpdateWindowSurface -o /tmp/ports/saanp/build/index.js",
+      "cwd": "/tmp/ports/saanp/source",
+      "exitCode": 0,
+      "durationMs": 3081,
+      "stdoutTail": "",
+      "stderrTail": ""
+    }
+  ]
+}

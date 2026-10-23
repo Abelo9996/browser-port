@@ -14,8 +14,14 @@ project uses semantic versioning.
   blocker named.
 - A bounded build retry ladder: on a failure `port` reads the compiler or linker output and applies a
   known fix in order (enable an SDL port library, compile all project sources, force-include
-  `<emscripten.h>`, downgrade an implicit-declaration error, grow the stack on a wasm trap, or wrap a
-  blocking loop in ASYNCIFY), recording each attempt.
+  `<emscripten.h>`, downgrade an implicit-declaration error, grow the stack on a wasm trap), recording
+  each attempt.
+- A build-time yield shim rung: when verify sees a blocking loop that never yields (common in desktop
+  SDL code), `port` relinks with `-sASYNCIFY` and wasm-ld `--wrap` on `SDL_PollEvent`,
+  `SDL_RenderPresent`, `SDL_GL_SwapWindow`, and `SDL_UpdateWindowSurface`, whose wrappers call
+  `emscripten_sleep(0)` after each present and when the event queue is empty. This returns control to
+  the browser each frame without modifying the game's source. During verify `port` also sends a neutral
+  Enter and Space so a game gated on a start key begins and its motion is observed.
 
 ### Changed
 
