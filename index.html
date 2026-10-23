@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>browser-port demos</title>
+<meta name="description" content="Turn an open-source C/C++ SDL game into a link anyone can play, in one command. Each of these was ported by running browser-port port &lt;github-url&gt;, with no flags typed by hand.">
+<meta property="og:title" content="browser-port demos">
+<meta property="og:description" content="Turn an open-source C/C++ SDL game into a link anyone can play, in one command. Each of these was ported by running browser-port port &lt;github-url&gt;, with no flags typed by hand.">
+<meta property="og:image" content="https://abelo9996.github.io/browser-port/pong.png">
+<style>
+:root { --bg:#f7f7f5; --fg:#1c1d20; --muted:#5d6068; --card:#fff; --line:#e3e3df; --accent:#2f6fd6; }
+@media (prefers-color-scheme: dark) { :root { --bg:#111317; --fg:#e8e8e6; --muted:#9a9ea8; --card:#1a1d23; --line:#2a2e36; --accent:#79a8f2; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+main { max-width:960px; margin:0 auto; padding:40px 16px 64px; }
+h1 { font-size:2rem; margin:0 0 6px; }
+.lede { font-size:1.15rem; color:var(--muted); margin:0 0 20px; max-width:46em; }
+.cta { display:inline-block; padding:9px 16px; border-radius:8px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; margin-right:10px; }
+.cta.alt { background:transparent; color:var(--accent); border:1px solid var(--line); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:32px; }
+.card { display:flex; flex-direction:column; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; color:inherit; text-decoration:none; transition:transform .15s; }
+.card:hover { transform:translateY(-2px); }
+.card img { width:100%; aspect-ratio:4/3; object-fit:cover; background:#000; display:block; }
+.body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+.body h2 { font-size:1.1rem; margin:0; }
+.body p { margin:0; color:var(--muted); font-size:.95rem; }
+.tag { font-size:.75rem; font-weight:500; color:var(--muted); border:1px solid var(--line); border-radius:99px; padding:1px 8px; margin-left:4px; vertical-align:middle; }
+.meta span { word-break:break-all; }
+.play { margin-top:auto; padding-top:8px; color:var(--accent); font-weight:600; }
+footer { margin-top:40px; color:var(--muted); font-size:.9rem; }
+footer a, .lede a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>browser-port demos</h1>
+  <p class="lede">Turn an open-source C/C++ SDL game into a link anyone can play, in one command. Each of these was ported by running browser-port port &lt;github-url&gt;, with no flags typed by hand.</p>
+  <a class="cta" href="https://github.com/Abelo9996/browser-port">Get it on GitHub</a>
+  <a class="cta alt" href="https://github.com/Abelo9996/browser-port#use-it-with-your-agent">Use it with your agent</a>
+  <div class="grid">
+    <a class="card" href="pong/">
+      <img src="pong.png" alt="Pong screenshot" loading="lazy">
+      <div class="body">
+        <h2>Pong <span class="tag">C++ SDL2, blocking loop</span></h2>
+        <p>Two-player Pong. Press Space to start. Its main loop never yields; browser-port added a yield at build time so it runs in a browser tab.</p>
+        <p class="meta">Original: <span>github.com/ucx15/pong</span> · MIT</p>
+        <span class="play">Play in your browser</span>
+      </div>
+    </a>
+    <a class="card" href="saanp-snake/">
+      <img src="saanp-snake.png" alt="Snake screenshot" loading="lazy">
+      <div class="body">
+        <h2>Snake <span class="tag">C SDL2, blocking loop</span></h2>
+        <p>Classic snake. Press Enter, then steer with the arrow keys. Ported in one command, no source edits.</p>
+        <p class="meta">Original: <span>github.com/iambasantarai/saanp.vi</span> · MIT</p>
+        <span class="play">Play in your browser</span>
+      </div>
+    </a>
+    <a class="card" href="packt-shmup/">
+      <img src="packt-shmup.png" alt="Space shooter screenshot" loading="lazy">
+      <div class="body">
+        <h2>Space shooter <span class="tag">C++ SDL2 game</span></h2>
+        <p>A small arcade shooter from a WebAssembly game book. The first build failed at link time; browser-port fixed it on its own and verified 60 fps.</p>
+        <p class="meta">Original: <span>github.com/PacktPublishing/Hands-On-Game-Development-with-WebAssembly</span> · MIT</p>
+        <span class="play">Play in your browser</span>
+      </div>
+    </a>
+    <a class="card" href="sdl-tetris/">
+      <img src="tetris.png" alt="SDL Tetris screenshot" loading="lazy">
+      <div class="body">
+        <h2>SDL Tetris <span class="tag">C SDL2 game</span></h2>
+        <p>A Tetris clone. Arrow keys move and rotate, Space drops. Measured at 57 fps in headless Chrome.</p>
+        <p class="meta">Original: <span>github.com/olzhasar/sdl-tetris</span> · MIT</p>
+        <span class="play">Play in your browser</span>
+      </div>
+    </a>
+    <a class="card" href="brainheck/">
+      <img src="brainheck.png" alt="brainheck screenshot" loading="lazy">
+      <div class="body">
+        <h2>brainheck <span class="tag">C terminal program</span></h2>
+        <p>A Brainfuck interpreter in a browser terminal. Its output matched the native build on the same inputs.</p>
+        <p class="meta">Original: <span>github.com/daniilsjb/brainheck</span> · MIT</p>
+        <span class="play">Play in your browser</span>
+      </div>
+    </a>
+  </div>
+  <footer>
+    <p>All five were compiled from C or C++ to WebAssembly with Emscripten by browser-port, then checked in headless Chrome. Pong and Snake use main loops that never yield to the browser; browser-port made them playable with a build-time yield shim, without changing their source. Build reports are in the repo under examples/.</p>
+    <p>Each demo keeps its original license next to it. If browser-port is useful to you, a star on <a href="https://github.com/Abelo9996/browser-port">GitHub</a> helps other people find it.</p>
+  </footer>
+</main>
+</body>
+</html>
