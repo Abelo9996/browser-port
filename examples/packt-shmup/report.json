@@ -1,0 +1,152 @@
+{
+  "title": "Space shooter (MIT, SDL2, Hands-On Game Dev with WebAssembly Ch.7)",
+  "generatedAt": "2026-10-23T08:00:58.236Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": "/tmp/ems/packt/Chapter07",
+    "resolvedPath": "/tmp/ems/packt/Chapter07",
+    "repo": null,
+    "language": "cpp",
+    "buildSystem": "plain",
+    "appKind": "sdl2",
+    "libraries": [
+      {
+        "name": "SDL2",
+        "evidence": "included in game.hpp"
+      },
+      {
+        "name": "SDL2_image",
+        "evidence": "included in game.hpp"
+      }
+    ],
+    "assets": [
+      "sprites/BirdOfAnger.png",
+      "sprites/BirdOfAngerExp.png",
+      "sprites/Franchise.png",
+      "sprites/Franchise1.png",
+      "sprites/Franchise2.png",
+      "sprites/Franchise3.png",
+      "sprites/Franchise4.png",
+      "sprites/FranchiseExp.png",
+      "sprites/FranchiseExplosion1.png",
+      "sprites/FranchiseExplosion2.png",
+      "sprites/FranchiseExplosion3.png",
+      "sprites/FranchiseExplosion4.png",
+      "sprites/FranchiseExplosion5.png",
+      "sprites/FranchiseExplosion6.png",
+      "sprites/FranchiseExplosion7.png",
+      "sprites/FranchiseExplosion8.png",
+      "sprites/Projectile.png",
+      "sprites/ProjectileExp.png"
+    ],
+    "entryPoint": "main.cpp",
+    "sourceFiles": [
+      "collider.cpp",
+      "enemy_ship.cpp",
+      "game.hpp",
+      "main.cpp",
+      "player_ship.cpp",
+      "projectile.cpp",
+      "projectile_pool.cpp",
+      "ship.cpp"
+    ],
+    "usesBlockingMainLoop": false,
+    "portability": "likely",
+    "blockers": [],
+    "notes": []
+  },
+  "build": {
+    "ok": true,
+    "outDir": "/tmp/ports/packt07/build",
+    "jsFile": "/tmp/ports/packt07/build/index.js",
+    "wasmFile": "/tmp/ports/packt07/build/index.wasm",
+    "dataFile": "/tmp/ports/packt07/build/index.data",
+    "flags": [
+      "-O2",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sUSE_SDL=2",
+      "-sUSE_SDL_IMAGE=2",
+      "-sSDL2_IMAGE_FORMATS=['png']",
+      "-I.",
+      "--preload-file",
+      "sprites@/sprites"
+    ],
+    "usedAsyncify": false,
+    "usedSetMainLoop": false,
+    "commands": [
+      {
+        "label": "build:em++",
+        "command": "em++ main.cpp -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS=['png'] -I. --preload-file sprites@/sprites -o /tmp/ports/packt07/build/index.js",
+        "cwd": "/tmp/ems/packt/Chapter07",
+        "exitCode": 1,
+        "durationMs": 1080,
+        "stdoutTail": "",
+        "stderrTail": "wasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: ProjectilePool::MoveProjectiles()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: Ship::Render()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: Ship::Render()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: ProjectilePool::RenderProjectiles()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: PlayerShip::PlayerShip()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: EnemyShip::EnemyShip()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: ProjectilePool::ProjectilePool()\nem++: error: '/opt/homebrew/opt/emscripten/libexec/llvm/bin/wasm-ld -o /tmp/ports/packt07/build/index.wasm /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/tmpkb453s3qlibemscripten_js_symbols.so -Bstatic --strip-debug --export=_emscripten_stack_alloc --export=setThrew --export=__wasm_call_ctors --export=emscripten_stack_get_current --export=_emscripten_stack_restore --export-if-defined=__start_em_asm --export-if-defined=__stop_em_asm --export-if-defined=__start_em_lib_deps --export-if-defined=__stop_em_lib_deps --export-if-defined=__start_em_js --export-if-defined=__stop_em_js --export-if-defined=main --export-if-defined=__main_argc_argv --export-table -z stack-size=65536 --max-memory=2147483648 --initial-heap=16777216 --no-entry --no-stack-first --table-base=1 --global-base=1024 /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o -L/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten -L/opt/homebrew/Cellar/emscripten/6.0.12/libexec/src/lib /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2_image-png.a /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2.a /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libpng.a /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libz.a -lGL-getprocaddr -lal -lhtml5 -lstubs -lnoexit -lc -ldlmalloc -lclang_rt.builtins -lc++-noexcept -lc++abi-noexcept -lsockets -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr' failed (returned 1)"
+      },
+      {
+        "label": "build:em++",
+        "command": "em++ collider.cpp enemy_ship.cpp main.cpp player_ship.cpp projectile.cpp projectile_pool.cpp ship.cpp -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS=['png'] -I. --preload-file sprites@/sprites -o /tmp/ports/packt07/build/index.js",
+        "cwd": "/tmp/ems/packt/Chapter07",
+        "exitCode": 0,
+        "durationMs": 2730,
+        "stdoutTail": "",
+        "stderrTail": ""
+      }
+    ]
+  },
+  "package": {
+    "siteDir": "/tmp/ports/packt07/site",
+    "indexHtml": "/tmp/ports/packt07/site/index.html",
+    "files": [
+      "index.data",
+      "index.html",
+      "index.js",
+      "index.wasm"
+    ],
+    "mode": "canvas"
+  },
+  "verify": {
+    "ok": true,
+    "mode": "canvas",
+    "consoleErrors": [],
+    "canvasNonBlank": true,
+    "fps": 60,
+    "frames": 265,
+    "durationMs": 4415,
+    "screenshots": [
+      "/tmp/ports/packt07/evidence/screenshots/canvas-start.png",
+      "/tmp/ports/packt07/evidence/screenshots/canvas-end.png"
+    ],
+    "keySteps": [],
+    "notes": [
+      "Canvas content changed across the observation window."
+    ]
+  },
+  "changes": [],
+  "patchFile": null,
+  "limits": [],
+  "commands": [
+    {
+      "label": "build:em++",
+      "command": "em++ main.cpp -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS=['png'] -I. --preload-file sprites@/sprites -o /tmp/ports/packt07/build/index.js",
+      "cwd": "/tmp/ems/packt/Chapter07",
+      "exitCode": 1,
+      "durationMs": 1080,
+      "stdoutTail": "",
+      "stderrTail": "wasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: ProjectilePool::MoveProjectiles()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: Ship::Render()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: Ship::Render()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: ProjectilePool::RenderProjectiles()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: PlayerShip::PlayerShip()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: EnemyShip::EnemyShip()\nwasm-ld: error: /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o: undefined symbol: ProjectilePool::ProjectilePool()\nem++: error: '/opt/homebrew/opt/emscripten/libexec/llvm/bin/wasm-ld -o /tmp/ports/packt07/build/index.wasm /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/tmpkb453s3qlibemscripten_js_symbols.so -Bstatic --strip-debug --export=_emscripten_stack_alloc --export=setThrew --export=__wasm_call_ctors --export=emscripten_stack_get_current --export=_emscripten_stack_restore --export-if-defined=__start_em_asm --export-if-defined=__stop_em_asm --export-if-defined=__start_em_lib_deps --export-if-defined=__stop_em_lib_deps --export-if-defined=__start_em_js --export-if-defined=__stop_em_js --export-if-defined=main --export-if-defined=__main_argc_argv --export-table -z stack-size=65536 --max-memory=2147483648 --initial-heap=16777216 --no-entry --no-stack-first --table-base=1 --global-base=1024 /var/folders/mc/cpcssnw11lsgr4bzhn3lgqp00000gn/T/emscripten_temp_tz_8jtyr/main.o -L/opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten -L/opt/homebrew/Cellar/emscripten/6.0.12/libexec/src/lib /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2_image-png.a /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libSDL2.a /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libpng.a /opt/homebrew/Cellar/emscripten/6.0.12/libexec/cache/sysroot/lib/wasm32-emscripten/libz.a -lGL-getprocaddr -lal -lhtml5 -lstubs -lnoexit -lc -ldlmalloc -lclang_rt.builtins -lc++-noexcept -lc++abi-noexcept -lsockets -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr' failed (returned 1)"
+    },
+    {
+      "label": "build:em++",
+      "command": "em++ collider.cpp enemy_ship.cpp main.cpp player_ship.cpp projectile.cpp projectile_pool.cpp ship.cpp -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS=['png'] -I. --preload-file sprites@/sprites -o /tmp/ports/packt07/build/index.js",
+      "cwd": "/tmp/ems/packt/Chapter07",
+      "exitCode": 0,
+      "durationMs": 2730,
+      "stdoutTail": "",
+      "stderrTail": ""
+    }
+  ]
+}

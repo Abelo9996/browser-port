@@ -1,0 +1,184 @@
+{
+  "title": "Basque (MPL-2.0, SDL2 top-down engine)",
+  "generatedAt": "2026-10-23T08:00:57.980Z",
+  "toolchain": {
+    "mode": "local",
+    "emccPath": "/opt/homebrew/bin/emcc",
+    "emccVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12-git"
+  },
+  "inspect": {
+    "source": "https://github.com/ryanpcmcquen/basque",
+    "resolvedPath": "/tmp/ports/basque/source",
+    "repo": {
+      "url": "https://github.com/ryanpcmcquen/basque",
+      "commit": "da59ea94202f499e2b8bd95b69d59610ff0c7002"
+    },
+    "language": "c",
+    "buildSystem": "make",
+    "appKind": "sdl2",
+    "libraries": [
+      {
+        "name": "SDL2_image",
+        "evidence": "included in source/mechanics.h"
+      },
+      {
+        "name": "SDL2_mixer",
+        "evidence": "included in source/types.h"
+      },
+      {
+        "name": "SDL2_ttf",
+        "evidence": "included in source/types.h"
+      },
+      {
+        "name": "SDL2",
+        "evidence": "included in source/utilities.h"
+      }
+    ],
+    "assets": [
+      ".theia/settings.json",
+      "TODO.txt",
+      "assets/audio/Basque_sample_music.ogg",
+      "assets/data/map_attributes.txt",
+      "assets/data/map_layout.txt",
+      "assets/data/map_layout_0.txt",
+      "assets/data/map_layout_1.txt",
+      "assets/data/map_layout_2.txt",
+      "assets/data/map_layout_3.txt",
+      "assets/data/map_layout_4.txt",
+      "assets/data/map_layout_5.txt",
+      "assets/data/map_layout_6.txt",
+      "assets/data/map_layout_7.txt",
+      "assets/data/map_layout_8.txt",
+      "assets/data/map_layout_9.txt",
+      "assets/data/map_library.txt",
+      "assets/fonts/BPtypewrite.ttf",
+      "assets/icons/basque_logo.iconset/icon_1024x1024.png",
+      "assets/icons/basque_logo.iconset/icon_128x128.png",
+      "assets/icons/basque_logo.iconset/icon_128x128@2x.png",
+      "assets/icons/basque_logo.iconset/icon_16x16.png",
+      "assets/icons/basque_logo.iconset/icon_16x16@2x.png",
+      "assets/icons/basque_logo.iconset/icon_256x256.png",
+      "assets/icons/basque_logo.iconset/icon_256x256@2x.png",
+      "assets/icons/basque_logo.iconset/icon_32x32.png",
+      "assets/icons/basque_logo.iconset/icon_32x32@2x.png",
+      "assets/icons/basque_logo.iconset/icon_512x512.png",
+      "assets/icons/basque_logo.iconset/icon_512x512@2x.png",
+      "assets/icons/basque_logo.iconset/icon_64x64.png",
+      "assets/icons/basque_logo.iconset/icon_64x64@2x.png",
+      "assets/icons/basque_logo.iconset/icon_8x8@2x.png",
+      "assets/icons/basque_logo.png",
+      "assets/images/basque_logo.png",
+      "assets/images/basque_logo_scaled.png",
+      "assets/images/basque_logo_scaled_v2.png",
+      "assets/images/basque_logo_scaled_v3.png",
+      "assets/images/character.png",
+      "assets/images/tiles_packed.png",
+      "demos/OLD__basque_demo.gif",
+      "demos/OLD__basque_demo_2.gif",
+      "demos/basque_linux_demo.gif",
+      "demos/basque_mac_demo.gif",
+      "demos/basque_wasm_demo.gif",
+      "demos/basque_windows_demo.gif",
+      "linux/basque_logo.png"
+    ],
+    "entryPoint": "source/basque.c",
+    "sourceFiles": [
+      "source/basque.c",
+      "source/configuration.h",
+      "source/initialization.h",
+      "source/map.h",
+      "source/mechanics.h",
+      "source/types.h",
+      "source/utilities.h"
+    ],
+    "usesBlockingMainLoop": false,
+    "portability": "needs-changes",
+    "blockers": [
+      {
+        "id": "fs-writes",
+        "what": "Writes files at runtime.",
+        "fix": "Use IDBFS for persistence and call FS.syncfs, or accept that writes live only in memory for the session."
+      }
+    ],
+    "notes": [
+      "Program writes to the filesystem. In the browser this maps to Emscripten MEMFS or IDBFS; persistent data needs IDBFS and an explicit sync."
+    ]
+  },
+  "build": {
+    "ok": true,
+    "outDir": "/tmp/ports/basque/build",
+    "jsFile": "/tmp/ports/basque/build/index.js",
+    "wasmFile": "/tmp/ports/basque/build/index.wasm",
+    "dataFile": "/tmp/ports/basque/build/index.data",
+    "flags": [
+      "-O2",
+      "-sALLOW_MEMORY_GROWTH=1",
+      "-sUSE_SDL=2",
+      "-sUSE_SDL_IMAGE=2",
+      "-sSDL2_IMAGE_FORMATS=['png']",
+      "-sUSE_SDL_MIXER=2",
+      "-sUSE_SDL_TTF=2",
+      "-Isource",
+      "--preload-file",
+      "assets@/assets"
+    ],
+    "usedAsyncify": false,
+    "usedSetMainLoop": false,
+    "commands": [
+      {
+        "label": "build:emcc",
+        "command": "emcc source/basque.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS=['png'] -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2 -Isource --preload-file assets@/assets -o /tmp/ports/basque/build/index.js",
+        "cwd": "/tmp/ports/basque/source",
+        "exitCode": 0,
+        "durationMs": 2175,
+        "stdoutTail": "",
+        "stderrTail": ""
+      }
+    ]
+  },
+  "package": {
+    "siteDir": "/tmp/ports/basque/site",
+    "indexHtml": "/tmp/ports/basque/site/index.html",
+    "files": [
+      "LICENSE",
+      "index.data",
+      "index.html",
+      "index.js",
+      "index.wasm"
+    ],
+    "mode": "canvas"
+  },
+  "verify": {
+    "ok": true,
+    "mode": "canvas",
+    "consoleErrors": [
+      "ERROR: IMG_Init: JPEG images are not supported"
+    ],
+    "canvasNonBlank": false,
+    "fps": 50.1,
+    "frames": 318,
+    "durationMs": 6350,
+    "screenshots": [
+      "/tmp/ports/basque/evidence/screenshots/canvas-start.png",
+      "/tmp/ports/basque/evidence/screenshots/canvas-end.png"
+    ],
+    "keySteps": [],
+    "notes": [
+      "Program logged 1 non-fatal error line(s); the frame loop kept running."
+    ]
+  },
+  "changes": [],
+  "patchFile": null,
+  "limits": [],
+  "commands": [
+    {
+      "label": "build:emcc",
+      "command": "emcc source/basque.c -O2 -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS=['png'] -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2 -Isource --preload-file assets@/assets -o /tmp/ports/basque/build/index.js",
+      "cwd": "/tmp/ports/basque/source",
+      "exitCode": 0,
+      "durationMs": 2175,
+      "stdoutTail": "",
+      "stderrTail": ""
+    }
+  ]
+}
