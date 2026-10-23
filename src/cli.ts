@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { inspect } from "./ops/inspect.js";
+import { port } from "./ops/port.js";
 import { detectToolchain } from "./ops/toolchain.js";
 import { build } from "./ops/build.js";
 import { packageSite } from "./ops/package.js";
@@ -27,6 +28,55 @@ function out(json: boolean, data: unknown, human: () => void): void {
 function collect(value: string, previous: string[]): string[] {
   return previous.concat([value]);
 }
+
+program
+  .command("port")
+  .description("one command: inspect, build, package, and verify a C/C++ SDL or raylib game into a playable link, or an honest no")
+  .argument("<source>", "GitHub URL or local path")
+  .option("--out <dir>", "workspace directory (default .browser-port/<name>)")
+  .option("--seconds <n>", "seconds to observe canvas frames", (v) => parseInt(v, 10), 4)
+  .option("--attempts <n>", "maximum build/verify attempts", (v) => parseInt(v, 10), 6)
+  .option("--no-serve", "do not start a preview server; just print the site directory")
+  .option("--json", "output JSON", false)
+  .action(async (source, opts) => {
+    const r = await port(source, {
+      outDir: opts.out,
+      observeSeconds: opts.seconds,
+      maxAttempts: opts.attempts,
+      onEvent: opts.json ? undefined : (msg) => console.error(`  ${msg}`),
+    });
+    if (opts.json) {
+      process.stdout.write(JSON.stringify(r, null, 2) + "\n");
+      if (!r.ok) process.exitCode = 1;
+      return;
+    }
+    if (!r.supported) {
+      console.log(`\nNot supported yet: ${r.blocker}`);
+      process.exitCode = 1;
+      return;
+    }
+    if (!r.ok) {
+      console.log(`\nCould not port automatically: ${r.blocker}`);
+      console.log(`Evidence: ${r.workspace}/evidence/`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log(`\nPlayable.`);
+    if (r.mode === "canvas" && r.fps != null) console.log(`Verified in headless Chrome at ${r.fps} fps.`);
+    if (r.screenshot) console.log(`Screenshot: ${r.screenshot}`);
+    if (opts.serve && r.siteDir) {
+      const handle = await serve(r.siteDir);
+      console.log(`\nPlay it at: ${handle.url}`);
+      console.log("Press Ctrl+C to stop.");
+      process.on("SIGINT", async () => {
+        await handle.close();
+        process.exit(0);
+      });
+    } else if (r.siteDir) {
+      console.log(`\nSite: ${r.siteDir}`);
+      console.log(`Serve it: browser-port serve ${r.siteDir}`);
+    }
+  });
 
 program
   .command("inspect")

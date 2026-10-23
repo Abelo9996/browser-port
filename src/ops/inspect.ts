@@ -54,9 +54,74 @@ const LIB_RULES: LibRule[] = [
   { name: "SDL2_mixer", include: /#\s*include\s*[<"](SDL2\/)?SDL_mixer\.h[>"]/ },
   { name: "SDL2_ttf", include: /#\s*include\s*[<"](SDL2\/)?SDL_ttf\.h[>"]/ },
   { name: "raylib", include: /#\s*include\s*[<"]raylib\.h[>"]/ },
-  { name: "OpenGL", include: /#\s*include\s*[<"](GL\/gl\.h|OpenGL\/|GLES[23]?\/|SDL_opengl\.h)[>"]/ },
+  { name: "OpenGL", include: /#\s*include\s*[<"](GL\/gl\.h|OpenGL\/gl|GLES[23]?\/|SDL_opengl\.h)[>"]/ },
   { name: "pthreads", include: /#\s*include\s*[<"]pthread\.h[>"]/ },
   { name: "sockets", include: /#\s*include\s*[<"](sys\/socket\.h|arpa\/inet\.h|netinet\/)[>"]/ },
+];
+
+/**
+ * Hard blockers: toolkits and native windowing layers that have no path through
+ * Emscripten's browser runtime. When one of these matches, the honest answer is
+ * "not supported", not "likely". OpenGL used through SDL2 or raylib is fine and
+ * is deliberately not matched here; only the native windowing layers are.
+ */
+interface RefusalRule {
+  id: string;
+  what: string;
+  reason: string;
+  /** Matching any pattern triggers the refusal. */
+  patterns: RegExp[];
+}
+
+const REFUSAL_RULES: RefusalRule[] = [
+  {
+    id: "qt",
+    what: "Uses the Qt toolkit.",
+    reason: "Qt draws through its own native windowing and has no Emscripten port in this tool. Not supported yet.",
+    patterns: [/#\s*include\s*[<"]Qt[A-Za-z]/, /#\s*include\s*[<"]Q[A-Z][A-Za-z]*[>"]/, /\bQApplication\b/, /\bQGuiApplication\b/],
+  },
+  {
+    id: "gtk",
+    what: "Uses the GTK toolkit.",
+    reason: "GTK draws through native windowing and has no Emscripten port in this tool. Not supported yet.",
+    patterns: [/#\s*include\s*[<"]gtk\//, /#\s*include\s*[<"]gtk-[0-9]/, /\bgtk_init\s*\(/, /\bgtk_application_new\s*\(/],
+  },
+  {
+    id: "wxwidgets",
+    what: "Uses wxWidgets.",
+    reason: "wxWidgets draws through native windowing and has no Emscripten port in this tool. Not supported yet.",
+    patterns: [/#\s*include\s*[<"]wx\//, /\bwxIMPLEMENT_APP\b/, /\bwxApp\b/],
+  },
+  {
+    id: "x11",
+    what: "Uses X11 windowing directly.",
+    reason: "Browsers have no X11 server. Port the windowing to SDL2 or raylib first. Not supported yet.",
+    patterns: [/#\s*include\s*[<"]X11\//, /\bXOpenDisplay\s*\(/, /\bXCreateWindow\s*\(/],
+  },
+  {
+    id: "glx",
+    what: "Creates an OpenGL context through GLX.",
+    reason: "GLX is native X11 OpenGL and does not exist in a browser. Use SDL2 or raylib for the window and GL context. Not supported yet.",
+    patterns: [/#\s*include\s*[<"]GL\/glx\.h[>"]/, /\bglX[A-Z][A-Za-z]*\s*\(/],
+  },
+  {
+    id: "wgl",
+    what: "Creates an OpenGL context through WGL (Windows).",
+    reason: "WGL is native Windows OpenGL and does not exist in a browser. Use SDL2 or raylib for the window and GL context. Not supported yet.",
+    patterns: [/\bwglCreateContext\s*\(/, /\bwglMakeCurrent\s*\(/],
+  },
+  {
+    id: "win32-gui",
+    what: "Uses the native Win32 GUI.",
+    reason: "The Win32 window API does not exist in a browser. Port the windowing to SDL2 or raylib first. Not supported yet.",
+    patterns: [/\bWinMain\s*\(/, /\bCreateWindowEx[AW]?\s*\(/, /\bRegisterClassEx[AW]?\s*\(/],
+  },
+  {
+    id: "cocoa-gl",
+    what: "Uses Cocoa or native macOS OpenGL (AGL/CGL).",
+    reason: "Cocoa and the native macOS GL layers do not exist in a browser. Use SDL2 or raylib. Not supported yet.",
+    patterns: [/#\s*(include|import)\s*[<"]Cocoa\//, /#\s*include\s*[<"]OpenGL\/OpenGL\.h[>"]/, /\bNSApplication\b/, /\bCGLCreateContext\s*\(/],
+  },
 ];
 
 interface Detection {
@@ -69,6 +134,8 @@ interface Detection {
   sourceFiles: string[];
   usesBlockingMainLoop: boolean;
   usesFilesystemWrites: boolean;
+  /** Hard blockers (toolkit or native windowing) that make the program unportable. */
+  refusals: Blocker[];
   notes: string[];
 }
 
@@ -97,6 +164,7 @@ export async function detect(resolvedPath: string): Promise<Detection> {
   else if (codeFiles.length > 0) buildSystem = "plain";
 
   const libMatches = new Map<string, string>();
+  const refusalMatches = new Map<string, string>();
   let usesBlockingMainLoop = false;
   let usesFilesystemWrites = false;
   let entryPoint: string | null = null;
@@ -115,12 +183,21 @@ export async function detect(resolvedPath: string): Promise<Detection> {
         libMatches.set(rule.name, `included in ${rel}`);
       }
     }
+    for (const rule of REFUSAL_RULES) {
+      if (!refusalMatches.has(rule.id) && rule.patterns.some((p) => p.test(content))) {
+        refusalMatches.set(rule.id, rel);
+      }
+    }
     if (!entryPoint && mainRe.test(content)) entryPoint = rel;
     if (sdlMainLoopRe.test(content) || raylibMainLoopRe.test(content)) usesBlockingMainLoop = true;
     if (fsWriteRe.test(content)) usesFilesystemWrites = true;
   }
 
   const libraries: DetectedLibrary[] = [...libMatches.entries()].map(([name, evidence]) => ({ name, evidence }));
+  const refusals: Blocker[] = [...refusalMatches.entries()].map(([id, rel]) => {
+    const rule = REFUSAL_RULES.find((r) => r.id === id)!;
+    return { id: rule.id, what: `${rule.what} (${rel})`, fix: rule.reason };
+  });
 
   let appKind: AppKind = "unknown";
   if (libMatches.has("SDL2")) appKind = "sdl2";
@@ -141,6 +218,7 @@ export async function detect(resolvedPath: string): Promise<Detection> {
     sourceFiles: codeFiles,
     usesBlockingMainLoop,
     usesFilesystemWrites,
+    refusals,
     notes,
   };
 }
@@ -163,20 +241,28 @@ function assessPortability(d: Detection): { portability: Portability; blockers: 
 
   const libNames = new Set(d.libraries.map((l) => l.name));
 
+  // Toolkit and native-windowing refusals, plus sockets and threads, have no
+  // path through the one-command browser runtime. Report them as not-supported
+  // rather than "likely" so the verdict is honest.
+  const hardBlockers: Blocker[] = [...d.refusals];
   if (libNames.has("sockets")) {
-    blockers.push({
+    hardBlockers.push({
       id: "sockets",
       what: "Uses BSD sockets.",
-      fix: "Browsers have no raw TCP/UDP. Replace with WebSocket (-lwebsocket.js) or remove networking for the port.",
+      fix: "Browsers have no raw TCP or UDP. Move networking to WebSockets, or remove it for the port. Not supported yet.",
     });
   }
   if (libNames.has("pthreads")) {
-    blockers.push({
+    hardBlockers.push({
       id: "pthreads",
-      what: "Uses pthreads.",
-      fix: "Enable -pthread and -sPTHREAD_POOL_SIZE, serve with COOP/COEP headers for SharedArrayBuffer, or build single-threaded.",
+      what: "Uses threads (pthreads) without browser threading set up.",
+      fix: "Browser threads need -pthread, a PTHREAD_POOL_SIZE, and COOP/COEP headers (SharedArrayBuffer), which the one-command path does not configure. Build single-threaded or set this up by hand. Not supported yet.",
     });
   }
+  if (hardBlockers.length > 0) {
+    return { portability: "not-supported", blockers: hardBlockers };
+  }
+
   if (d.usesBlockingMainLoop) {
     blockers.push({
       id: "blocking-main-loop",

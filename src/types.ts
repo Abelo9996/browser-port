@@ -71,6 +71,37 @@ export interface VerifyKeyStep {
   afterMs: number;
 }
 
+export interface PortAttempt {
+  /** 1-based attempt number. */
+  n: number;
+  /** The fix that produced this attempt, or null for the first try. */
+  fix: string | null;
+  sources: string[];
+  libs: string[];
+  flags: string[];
+  asyncify: boolean;
+  phase: "build" | "verify";
+  ok: boolean;
+  /** Tail of the compiler/linker/verify output when this attempt failed. */
+  errorTail: string;
+}
+
+export interface PortResult {
+  ok: boolean;
+  workspace: string;
+  /** False when inspect refused the program up front. */
+  supported: boolean;
+  /** The reason a program was refused, or the blocker that stopped the build. */
+  blocker: string | null;
+  attempts: PortAttempt[];
+  siteDir: string | null;
+  url: string | null;
+  fps: number | null;
+  screenshot: string | null;
+  mode: "canvas" | "stdio";
+  notes: string[];
+}
+
 export interface VerifyResult {
   ok: boolean;
   mode: "canvas" | "stdio";

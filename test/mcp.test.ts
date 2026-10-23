@@ -12,7 +12,7 @@ describe("mcp server", () => {
 
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual(["build", "inspect", "package", "report", "serve", "toolchain", "verify"]);
+    expect(names).toEqual(["build", "inspect", "package", "port", "report", "serve", "toolchain", "verify"]);
 
     await client.close();
   });

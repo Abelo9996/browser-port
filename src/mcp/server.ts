@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { inspect } from "../ops/inspect.js";
+import { port } from "../ops/port.js";
 import { detectToolchain } from "../ops/toolchain.js";
 import { build } from "../ops/build.js";
 import { packageSite } from "../ops/package.js";
@@ -29,6 +30,24 @@ function fail(err: unknown) {
  */
 export function createServer(): McpServer {
   const server = new McpServer({ name: "browser-port", version: "0.1.0" });
+
+  server.tool(
+    "port",
+    "One call: inspect a C/C++ SDL or raylib game, derive sources/libraries/assets, build to WebAssembly with a bounded auto-fix retry ladder, package a static site, and verify it in headless Chrome. Returns a playable site directory with fps and a screenshot, or an honest not-supported with the blocker named. Prefer this over the individual tools; drop to them only when you need to hand-edit source between steps.",
+    {
+      source: z.string().describe("GitHub URL or local path"),
+      out: z.string().optional().describe("workspace directory"),
+      seconds: z.number().default(4).describe("seconds to observe canvas frames"),
+      attempts: z.number().default(6).describe("maximum build/verify attempts"),
+    },
+    async ({ source, out, seconds, attempts }) => {
+      try {
+        return json(await port(source, { outDir: out, observeSeconds: seconds, maxAttempts: attempts }));
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
 
   server.tool(
     "inspect",

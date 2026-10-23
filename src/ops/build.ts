@@ -21,6 +21,10 @@ export interface BuildSpec {
   preloadMap?: string[];
   /** Wrap a blocking main loop so it yields to the browser. */
   useAsyncify?: boolean;
+  /** Image formats SDL2_image should decode. Defaults to png. */
+  imageFormats?: string[];
+  /** Directories to add to the include path (relative to sourceDir). */
+  includeDirs?: string[];
   /** Extra emcc flags the agent wants to add. */
   extraFlags?: string[];
 }
@@ -31,7 +35,12 @@ export function flagsFor(spec: BuildSpec, detectedLibs: string[] = []): string[]
   const libs = new Set(detectedLibs);
 
   if (spec.appKind === "sdl2" || libs.has("SDL2")) flags.push("-sUSE_SDL=2");
-  if (libs.has("SDL2_image")) flags.push("-sUSE_SDL_IMAGE=2", "-sSDL2_IMAGE_FORMATS=['png']");
+  if (libs.has("SDL2_image")) {
+    const formats = (spec.imageFormats && spec.imageFormats.length ? spec.imageFormats : ["png"])
+      .map((f) => `'${f}'`)
+      .join(",");
+    flags.push("-sUSE_SDL_IMAGE=2", `-sSDL2_IMAGE_FORMATS=[${formats}]`);
+  }
   if (libs.has("SDL2_mixer")) flags.push("-sUSE_SDL_MIXER=2");
   if (libs.has("SDL2_ttf")) flags.push("-sUSE_SDL_TTF=2");
   if (spec.appKind === "raylib") {
@@ -41,6 +50,9 @@ export function flagsFor(spec: BuildSpec, detectedLibs: string[] = []): string[]
   if (libs.has("OpenGL") && spec.appKind !== "raylib") flags.push("-sFULL_ES3=1");
   if (spec.useAsyncify) flags.push("-sASYNCIFY");
 
+  for (const dir of spec.includeDirs ?? []) {
+    flags.push(`-I${dir}`);
+  }
   for (const dir of spec.preload ?? []) {
     flags.push("--preload-file", `${dir}@/${dir}`);
   }
