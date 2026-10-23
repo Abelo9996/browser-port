@@ -30,13 +30,10 @@ static host, a measured frame rate, and a report of everything that was done and
 
 ## Try it
 
-> Not on npm yet. Until the first release, install from GitHub:
-
 ```bash
-git clone https://github.com/Abelo9996/browser-port && cd browser-port
-npm install && npm run build && npm link       # puts `browser-port` on your PATH
-brew install emscripten                         # or have Docker running for the emscripten/emsdk image
-npx playwright install chromium                 # the browser `verify` uses
+npm install -g browser-port        # or run it with npx browser-port ...
+brew install emscripten            # or have Docker running for the emscripten/emsdk image
+npx playwright install chromium    # the browser `verify` uses
 ```
 
 Then port a game in one command:
