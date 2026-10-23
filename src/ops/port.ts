@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { AppKind, BuildResult, PortAttempt, PortResult, VerifyResult } from "../types.js";
 import { inspect } from "./inspect.js";
@@ -8,6 +8,7 @@ import { diagnoseBuild } from "./diagnose.js";
 import { build, type BuildSpec } from "./build.js";
 import { packageSite } from "./package.js";
 import { verify } from "./verify.js";
+import { yieldShimSource, yieldShimWrapFlags } from "./yieldshim.js";
 import { Workspace } from "../util/evidence.js";
 import { walk } from "../util/scan.js";
 
@@ -143,7 +144,16 @@ export async function port(source: string, options: PortOptions = {}): Promise<P
 
     emit(`build ok; package + verify`);
     await packageSite(root, b, { title: options.title ?? name, mode, licenseFile: licenseRel ? path.join(resolvedPath, licenseRel) : undefined });
-    const v = await verify(root, { mode, observeSeconds: options.observeSeconds ?? 4 });
+    // Many games sit on a title screen until a confirm key. Send Enter then
+    // Space, one per sample step, so a game gated on "press a key" starts and
+    // its first moving frame is captured. Interleaving with sampling means a
+    // later key that pauses (Space in some games) cannot erase the motion the
+    // earlier key already produced.
+    const v = await verify(root, {
+      mode,
+      observeSeconds: options.observeSeconds ?? 4,
+      keys: mode === "canvas" ? [{ key: "Enter", afterMs: 0 }, { key: "Space", afterMs: 0 }] : undefined,
+    });
     lastVerify = v;
     attempts.push({ n, fix: lastFix(applied), sources: [...spec.sources], libs: [...libs], flags: b.flags, asyncify: Boolean(spec.useAsyncify), phase: "verify", ok: v.ok, errorTail: v.ok ? "" : summarizeVerify(v) });
 
@@ -167,12 +177,22 @@ export async function port(source: string, options: PortOptions = {}): Promise<P
       continue;
     }
 
-    // A canvas that never drew a frame is the signature of a blocking loop that
-    // never yields. Enabling ASYNCIFY lets it return control to the browser.
-    if (mode === "canvas" && !spec.useAsyncify && (v.frames ?? 0) === 0 && !applied.has("asyncify")) {
-      emit(`verify drew no frames; retrying with ASYNCIFY`);
-      applied.add("asyncify");
+    // A canvas that started but never advanced a frame or changed a pixel is a
+    // blocking loop that never yields to the browser (a bare while loop, or a
+    // start screen that busy-polls events). Link a build-time yield shim that
+    // makes each present and each idle event poll return control to the browser
+    // via ASYNCIFY, without touching the game's source.
+    const didNotRun = (v.frames ?? 0) === 0 && !v.canvasNonBlank;
+    if (mode === "canvas" && didNotRun && !applied.has("yield-shim")) {
+      emit(`verify saw a non-yielding loop; retrying with a build-time yield shim (ASYNCIFY + --wrap)`);
+      applied.add("yield-shim");
+      const shimPath = path.join(root, "build", "__bp_yield_shim.c");
+      await mkdir(path.join(root, "build"), { recursive: true });
+      await writeFile(shimPath, yieldShimSource());
+      if (!spec.sources.includes(shimPath)) spec.sources = [...spec.sources, shimPath];
       spec.useAsyncify = true;
+      spec.extraFlags = [...(spec.extraFlags ?? []), ...yieldShimWrapFlags()];
+      notes.push("Linked a build-time yield shim (wasm-ld --wrap on SDL_PollEvent/SDL_RenderPresent/SDL_GL_SwapWindow/SDL_UpdateWindowSurface plus ASYNCIFY) so the blocking loop yields to the browser. The game source was not modified.");
       continue;
     }
 

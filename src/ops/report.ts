@@ -126,7 +126,11 @@ function renderMarkdown(b: ReportBundle): string {
     L.push(`- Mode: ${b.verify.mode}`);
     if (b.verify.mode === "canvas") {
       L.push(`- Canvas draws non-blank frames: ${b.verify.canvasNonBlank ? "yes" : "no"}`);
-      L.push(`- Frames observed: ${b.verify.frames} over ${b.verify.durationMs} ms (${b.verify.fps} fps)`);
+      if (b.verify.fps != null && (b.verify.frames ?? 0) > 0) {
+        L.push(`- Frames observed: ${b.verify.frames} over ${b.verify.durationMs} ms (${b.verify.fps} fps)`);
+      } else {
+        L.push(`- Liveness: canvas content changed over ${b.verify.durationMs} ms (ASYNCIFY yield loop; no requestAnimationFrame counter, so no fps figure)`);
+      }
       if (b.verify.keySteps?.length) {
         L.push(`- Scripted keys: ${b.verify.keySteps.map((k) => k.key).join(", ")}`);
       }

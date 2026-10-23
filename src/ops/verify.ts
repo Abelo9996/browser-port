@@ -102,18 +102,32 @@ export async function verify(workspaceRoot: string, options: VerifyOptions = {})
   const consoleErrors: string[] = [];
   const notes: string[] = [];
 
+  // A program that pins the renderer's CPU in a non-yielding loop can make CDP
+  // calls queue forever. A hard overall deadline guarantees verify returns, on
+  // top of the per-call timeouts, so the port loop never hangs.
+  const overallMs = ((options.observeSeconds ?? 3) + 60) * 1000;
+
   try {
-    if (mode === "stdio") {
-      const result = await verifyStdio(pw, browser, server.url, shotsDir, options, consoleErrors, notes);
-      await ws.writeJson("verify.json", result);
-      return result;
-    }
-    const result = await verifyCanvas(pw, browser, server.url, shotsDir, options, consoleErrors, notes);
+    const work = mode === "stdio"
+      ? verifyStdio(pw, browser, server.url, shotsDir, options, consoleErrors, notes)
+      : verifyCanvas(pw, browser, server.url, shotsDir, options, consoleErrors, notes);
+    const raced = await withTimeout(work, overallMs);
+    const result: VerifyResult = raced === TIMED_OUT
+      ? {
+          ok: false,
+          mode,
+          consoleErrors,
+          frames: 0,
+          fps: 0,
+          screenshots: [],
+          notes: [...notes, `Verify exceeded its ${Math.round(overallMs / 1000)}s deadline; the program most likely runs a blocking loop that never yields to the browser.`],
+        }
+      : raced;
     await ws.writeJson("verify.json", result);
     return result;
   } finally {
-    await browser.close();
-    await server.close();
+    await withTimeout(browser.close().catch(() => undefined), 10000);
+    await server.close().catch(() => undefined);
   }
 }
 
@@ -182,19 +196,31 @@ async function verifyCanvas(
   );
   if (started !== true) notes.push("Runtime did not report started within 20s (a blocking loop that never yields to the browser looks like this).");
 
+  // Fast wedge check: if a trivial evaluate does not return, the renderer's main
+  // thread is pinned by a non-yielding loop. Bail now instead of grinding
+  // through slow screenshot samples that would each time out.
+  const probe = await withTimeout(page.evaluate<number>("1").then(() => true).catch(() => false), 4000);
+  if (probe !== true) {
+    notes.push("Renderer is unresponsive (a blocking loop that never yields to the browser); treating the run as not playable.");
+    return {
+      ok: false,
+      mode: "canvas",
+      consoleErrors,
+      canvasNonBlank: false,
+      fps: 0,
+      frames: 0,
+      durationMs: 0,
+      screenshots: [],
+      notes,
+    };
+  }
+
   // A canvas element screenshot composites the real rendered frame, which is a
   // reliable signal. Reading the WebGL buffer directly is not, because SDL does
   // not preserve the drawing buffer between frames.
   const startShot = await withTimeout(screenshotCanvas(page, path.join(shotsDir, "canvas-start.png")), 10000);
   const startBuf = startShot === TIMED_OUT ? null : startShot;
   screenshots.push(path.join(shotsDir, "canvas-start.png"));
-
-  // Scripted key presses.
-  const keySteps = options.keys ?? [];
-  for (const step of keySteps) {
-    await page.waitForTimeout(step.afterMs);
-    await withTimeout(page.keyboard.press(step.key), 5000);
-  }
 
   // Measure activity over the observation window. We track two independent
   // signals and accept either: the requestAnimationFrame counter (which
@@ -211,11 +237,16 @@ async function verifyCanvas(
   const t0 = Date.now();
 
   // Sample the canvas a handful of times; "changed" if any sample differs from
-  // the first and from a blank baseline.
+  // the first (taken before any key). Nudge keys are pressed one per step,
+  // interleaved with sampling, so a game gated on a start key begins and the
+  // first moving frame is captured before a later key (for example a pause
+  // toggle) can take effect.
+  const keySteps = options.keys ?? [];
   const samples: (Buffer | null)[] = [startBuf];
-  const sampleCount = 6;
+  const sampleCount = Math.max(6, keySteps.length + 2);
   const interval = Math.max(200, Math.floor(observeMs / sampleCount));
   for (let i = 0; i < sampleCount; i++) {
+    if (i < keySteps.length) await withTimeout(page.keyboard.press(keySteps[i]!.key), 5000);
     await page.waitForTimeout(interval);
     samples.push(await canvasBuffer(page));
   }
