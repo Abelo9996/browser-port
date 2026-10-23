@@ -1,6 +1,6 @@
 {
   "name": "browser-port",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Give your agent the power to port any open-source desktop app or game to the browser, so it runs from a link anyone can open.",
   "license": "MIT",
   "author": "Abel Yagubyan",

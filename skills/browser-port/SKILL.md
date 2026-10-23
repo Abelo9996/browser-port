@@ -1,24 +1,44 @@
 ---
 name: browser-port
-description: Port an open-source C or C++ desktop app or game (SDL2, raylib, or stdin/stdout) to the browser so it runs from a link. Use when the user wants to run a native program on the web, make a desktop game playable in a browser, or share a C/C++ tool as a web page. Drives Emscripten, a headless browser, and a static site builder; records evidence at every step.
+description: Turn an open-source C or C++ SDL or raylib game (or a plain stdin/stdout program) into a link anyone can play, in one command, or get an honest reason why not. Use when the user wants to run a native game on the web, make a desktop C/C++ game playable in a browser, or share a C/C++ tool as a web page. Drives Emscripten, a headless browser, and a static site builder; records evidence at every step.
 ---
 
 # browser-port
 
-You give the user the power to port a desktop app or game to the browser. You decide what to do; the
-`browser-port` tools do the reliable work (Emscripten, packaging, headless-browser verification) and
-record evidence. The tools never call a model. You call them in order and read their output.
+You give the user the power to port a C/C++ game or app to the browser. The `browser-port` tools do
+the reliable work (Emscripten, packaging, headless-browser verification) and record evidence. The
+tools never call a model.
 
 ## What is supported
 
 - C and C++ programs that use SDL2 (and SDL2_image / SDL2_mixer / SDL2_ttf), raylib, or plain
   stdin/stdout.
-- Build systems: a short list of source files compiled directly (the reliable path), or CMake / Make
-  projects you adapt into a source list.
+- Not supported, and reported honestly with the reason: Qt, GTK, wxWidgets, native X11/GLX/WGL/Cocoa
+  windowing, Win32 GUI, raw sockets, and threads. OpenGL used through SDL2 or raylib is fine.
 
-Anything else gets an honest "not supported yet" with the reason. Do not pretend otherwise.
+## The fast path: one call
 
-## The loop
+Prefer `port <github-url|path>`. It inspects, derives the sources (from a CMake `add_executable` or
+the file with `main` plus its local includes), the libraries, the app kind, and the asset preload map,
+then builds, packages, and verifies in headless Chrome in a single step. On a build failure it reads
+the error and applies a known fix in order (enable an SDL port library, compile all project sources,
+force-include `<emscripten.h>`, downgrade an implicit-declaration error, grow the stack, or wrap a
+blocking loop in ASYNCIFY), retrying a bounded number of times and recording each attempt.
+
+```
+port https://github.com/owner/game
+```
+
+Read the result: `ok`, `fps`, the `siteDir`, the `screenshot`, and the `attempts` ladder. If
+`supported` is false, relay the `blocker` to the user plainly and stop. If it built but did not verify,
+read `blocker` and the `evidence/` folder for the real cause. Serve the `siteDir` with the `serve` tool
+to give the user a link.
+
+Drop to the individual tools below only when `port` cannot finish on its own and you need to hand-edit
+the source between steps (for example, refactoring a blocking `while` loop into
+`emscripten_set_main_loop`, which `port` will not do for you).
+
+## The manual loop
 
 1. `inspect <github-url|path>` first. Read the portability verdict, the libraries, the entry point, and
    each blocker with its usual fix. If it says `not-supported`, tell the user plainly and stop.

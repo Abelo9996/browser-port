@@ -14,8 +14,8 @@ import { startMcpServer } from "./mcp/server.js";
 const program = new Command();
 program
   .name("browser-port")
-  .description("Port open-source desktop apps and games to the browser.")
-  .version("0.1.0");
+  .description("Port open-source C/C++ SDL or raylib games to the browser.")
+  .version("0.2.0");
 
 function out(json: boolean, data: unknown, human: () => void): void {
   if (json) {

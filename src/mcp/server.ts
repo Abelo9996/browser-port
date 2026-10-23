@@ -29,7 +29,7 @@ function fail(err: unknown) {
  * itself never calls a model.
  */
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "browser-port", version: "0.1.0" });
+  const server = new McpServer({ name: "browser-port", version: "0.2.0" });
 
   server.tool(
     "port",

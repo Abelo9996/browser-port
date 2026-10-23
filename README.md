@@ -2,7 +2,7 @@
 
 # browser-port
 
-### Give your agent the power to port any open-source desktop app or game to the browser, so it runs from a link anyone can open.
+### Turn an open-source C/C++ SDL or raylib game into a link anyone can play, in one command, or get an honest reason why not.
 
 [![CI](https://github.com/Abelo9996/browser-port/actions/workflows/ci.yml/badge.svg)](https://github.com/Abelo9996/browser-port/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -21,11 +21,12 @@
 
 ---
 
-Found a great open-source game or tool that only runs on someone's desktop? Ask your agent to port it.
-browser-port gives it the operations to do that properly: check whether the code can run in a browser,
-compile it to WebAssembly with Emscripten, package a static site, then open it in a real browser and
-prove it works. You get a folder you can put on any static host, and a report of everything that was
-done and checked.
+Found a great open-source C or C++ game that only runs on someone's desktop? Point browser-port at the
+repo. It checks whether the code can run in a browser, works out the sources, libraries, and assets on
+its own, compiles to WebAssembly with Emscripten, reads and fixes common build failures, packages a
+static site, then opens it in a real browser and proves it works. You get a folder you can put on any
+static host, a measured frame rate, and a report of everything that was done and checked, or an honest
+"not supported yet" with the blocker named.
 
 ## Try it
 
@@ -38,25 +39,36 @@ brew install emscripten                         # or have Docker running for the
 npx playwright install chromium                 # the browser `verify` uses
 ```
 
-Then port the Tetris clone from the GIF above:
+Then port a game in one command:
 
 ```bash
-browser-port inspect https://github.com/olzhasar/sdl-tetris --dest /tmp/tetris-src --save /tmp/tetris
-browser-port build /tmp/tetris --source /tmp/tetris-src \
-  --sources src/game.c src/graphics.c src/input.c src/main.c \
-  --app-kind sdl2 --libs SDL2 SDL2_ttf --preload-map "src/assets/font.ttf@font.ttf"
-browser-port package /tmp/tetris --title "SDL Tetris" --mode canvas --license /tmp/tetris-src/LICENSE
-browser-port verify /tmp/tetris --mode canvas --seconds 3
-browser-port serve /tmp/tetris/site                # open the printed URL and play
+browser-port port https://github.com/ryanpcmcquen/basque
 ```
 
-What `verify` printed on a fresh run (Apple M4, Emscripten 6.0.12):
+It inspects, derives the sources and libraries, builds (retrying with known fixes if the first build
+fails), packages, verifies in headless Chrome, and prints a link you can open and play. On a fresh run
+(Apple M4, Emscripten 6.0.12) it reported:
 
 ```
-Verify pass (canvas)
-Frames: 166, fps: 55.2, non-blank: true
-  note: Canvas content changed across the observation window.
+  build attempt 1: source/basque.c  [asyncify=off]
+  build ok; package + verify
+  verified at 50.1 fps
+
+Playable.
+Verified in headless Chrome at 50.1 fps.
+Play it at: http://127.0.0.1:52231/
 ```
+
+If it cannot be ported, you get the reason instead:
+
+```
+$ browser-port port https://github.com/some/qt-app
+Not supported yet: Uses the Qt toolkit. Qt draws through its own native windowing and has no
+Emscripten port in this tool. Not supported yet.
+```
+
+The individual steps (`inspect`, `build`, `package`, `verify`, `report`) are still there for when you
+want to hand-edit the source between them.
 
 ## Use it with your agent
 
@@ -67,11 +79,11 @@ browser-port setup --yes    # registers the MCP server with Claude Code, Codex a
 
 Then just ask:
 
-> "Port github.com/olzhasar/sdl-tetris to the browser and prove it works."
+> "Port github.com/ryanpcmcquen/basque to the browser and prove it works."
 
-The agent follows [`skills/browser-port/SKILL.md`](skills/browser-port/SKILL.md): inspect first, fix
-only what blocks the port, record every source change as a patch, verify in a real browser, and say
-plainly when something isn't supported.
+The agent follows [`skills/browser-port/SKILL.md`](skills/browser-port/SKILL.md): it calls the one
+`port` operation, reads the measured result, serves the link, and says plainly when something isn't
+supported. It drops to the individual steps only when the source needs a hand edit.
 
 > `setup` registers `npx -y browser-port mcp`, which works once the package is on npm. Until then,
 > point your agent at the local build instead: `claude mcp add browser-port -- browser-port mcp`.
@@ -83,13 +95,18 @@ the evidence bundle, screenshots, and the runnable site with the upstream licens
 
 | Program | What it is | Result |
 | --- | --- | --- |
+| [packt-shmup](examples/packt-shmup) | C++ shoot-em-up, SDL2 + SDL2_image | `port` in one command: 60 fps. First build linked only `main.cpp` and failed; it recompiled all seven sources and linked |
+| [basque](examples/basque) | C top-down 2D engine, SDL2 + image/mixer/ttf | `port` in one command: 50.1 fps, no manual flags |
 | [sdl-tetris](examples/sdl-tetris) | C game, SDL2 + SDL2_ttf | Plays in the browser, about 55 to 57 fps, no console errors |
 | [brainheck](examples/brainheck) | C terminal program (stdin/stdout) | Browser output matched the native build for the same inputs |
 | [hexyl](examples/not-supported/hexyl) | Rust hex viewer | "Not supported yet", with the reason |
 
-One honest note: sdl-tetris already guarded its main loop for Emscripten, so it needed no source
-edits. The tool handles programs that don't (it switches a blocking loop to
-`emscripten_set_main_loop` or ASYNCIFY and records the patch), but the examples here don't show that yet.
+Honest notes on the limits of one command: it ports games whose loop is web-ready
+(`emscripten_set_main_loop`) or yields through `SDL_Delay` under ASYNCIFY. A game that busy-waits in a
+plain `while` loop with no yield (common in desktop code) builds but will not run until its loop is
+refactored, and `port` says so rather than hanging. Programs that fail to compile upstream, that need a
+codec Emscripten does not ship (for example FLAC in SDL2_mixer), or that trap at runtime are reported
+with the reason, not papered over.
 
 ## How it works
 
@@ -104,7 +121,8 @@ flowchart LR
 
 | Step | What it does | Tools it drives |
 | --- | --- | --- |
-| `inspect` | Language, build system, libraries, assets, entry point, and a verdict: likely, needs changes (each blocker with its usual fix), or not supported | git |
+| `port` | The whole pipeline in one call: inspect, derive sources/libraries/assets, build with a bounded auto-fix retry ladder, package, verify, print a link with the fps. Falls back to an honest not-supported | all of the below |
+| `inspect` | Language, build system, libraries, assets, entry point, and a verdict: likely, needs changes (each blocker with its usual fix), or not supported (Qt, GTK, native windowing, threads, sockets) | git |
 | `toolchain` | Finds a local `emcc`, else the `emscripten/emsdk` Docker image, else tells you how to install it | Emscripten, Docker |
 | `build` | Compiles with the right flags (`-sUSE_SDL=2`, asset preloading, memory growth, ASYNCIFY when needed) and records every command | emcc |
 | `package` | A self-contained site: canvas or terminal page, loading progress, fullscreen, keyboard focus, an error panel | |
@@ -116,10 +134,14 @@ Every step is a CLI subcommand (add `--json`) and an MCP tool.
 
 ## What it can't do
 
-- Only C and C++ programs that use SDL2, raylib, or plain stdin/stdout for now. Other languages and
-  toolkits (GTK, Qt, native OpenGL windowing) get an honest "not supported yet" with the reason.
-- No raw TCP or UDP sockets in a browser. Networked programs have to move to WebSockets.
-- Threads need cross-origin isolation headers, which many static hosts don't set by default.
+- Only C and C++ programs that use SDL2, raylib, or plain stdin/stdout. Other languages and toolkits
+  (Qt, GTK, wxWidgets), native X11/GLX/WGL/Cocoa windowing, the Win32 GUI, raw sockets, and threads get
+  an honest "not supported yet" with the reason. OpenGL used through SDL2 or raylib is fine.
+- One command auto-fixes build failures (missing SDL port libraries, uncompiled sources, a missing
+  `<emscripten.h>`, implicit-declaration errors, a small stack) and wraps a blocking loop in ASYNCIFY,
+  but it does not rewrite source. A game that busy-waits with no yield needs its loop refactored to
+  `emscripten_set_main_loop` by hand first.
+- Codecs Emscripten does not bundle (for example FLAC in SDL2_mixer) are not available.
 - A program that reads all of stdin as its input can't also take interactive input in the terminal page.
 
 ## Privacy and safety
