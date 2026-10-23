@@ -13,7 +13,7 @@
 
 <sub>A C + SDL2 Tetris clone, built to WebAssembly by browser-port and played in headless Chrome during <code>verify</code>.</sub>
 
-**Play the ported programs in your browser: [SDL Tetris](https://abelo9996.github.io/browser-port/sdl-tetris/) (C + SDL2) · [brainheck](https://abelo9996.github.io/browser-port/brainheck/) (C terminal program)**
+**Play them in your browser: [Pong](https://abelo9996.github.io/browser-port/pong/) · [Snake](https://abelo9996.github.io/browser-port/saanp-snake/) · [Space shooter](https://abelo9996.github.io/browser-port/packt-shmup/) · [SDL Tetris](https://abelo9996.github.io/browser-port/sdl-tetris/) · [all demos](https://abelo9996.github.io/browser-port/)**
 
 [Try it](#try-it) · [Use it with your agent](#use-it-with-your-agent) · [Real ports](#real-ports) · [How it works](#how-it-works) · [Limits](#what-it-cant-do)
 
